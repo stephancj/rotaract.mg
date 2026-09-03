@@ -1,0 +1,341 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+const rotaractMadagasikaraLogo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png';
+
+const apiBase = (import.meta.env.PUBLIC_TOLOTANANA_API_URL || 'http://127.0.0.1:3000').replace(/\/$/, '');
+const steps = ['Profil', 'Disponibilité', 'Expérience', 'Compétences', 'Motivation', 'Validation'];
+const rotaractClubs = ['Rotaract Ankoay', 'Rotaract Ankorondrano', 'Rotaract Faneva', 'Rotaract Amontana', 'Rotaract Athénée Antsirabe', 'Rotaract Hina', 'Rotaract Iloivato', 'Rotaract Mahajanga-Bombacaceae', 'Rotaract Tsinjo'];
+const rotaryClubs = ['Rotary Antananarivo', 'Rotary Antananarivo-Ainga', 'Rotary Antananarivo Ambohitsorohitra', 'Rotary Antananarivo Ankorondrano', 'Rotary Antananarivo-Anosy', 'Rotary Antananarivo-Ivandry', 'Rotary Antananarivo-Mahamasina', 'Rotary Antananarivo Maroloko', 'Rotary Antananarivo-Tsimbaroa', 'Rotary Antananarivo-Vovonana', 'Rotary Fianarantsoa', 'Rotary Ivato', 'Rotary Lac Alaotra', 'Rotary Mahajanga', 'Rotary Manakara', 'Rotary Morondava Baobab', 'Rotary Nosy Be', 'Rotary Tamatave', 'Rotary Toliara'];
+const skills = [
+  ['organisation', 'Organisation', 'Planning et coordination'], ['relation-patient', 'Relation patient', 'Accueil et écoute'],
+  ['premiers-secours', 'Premiers secours', 'Formation ou pratique'], ['photo-video', 'Photo & vidéo', 'Prise de vue et montage'],
+  ['reseaux-sociaux', 'Réseaux sociaux', 'Contenu et publication'], ['traduction', 'Traduction', 'Malgache, français ou autre'],
+  ['conduite', 'Conduite', 'Permis et disponibilité'], ['cuisine', 'Cuisine', 'Préparation et service'],
+];
+const roles = [['accueil', 'Accueil'], ['enregistrement', 'Enregistrement'], ['logistique', 'Logistique'], ['interpretariat', 'Interprétariat'], ['restauration', 'Restauration'], ['communication', 'Communication']];
+const commissions = [
+  ['logistique', 'Logistique', 'Ressources, transports et organisation.', "La commission Logistique est responsable de la coordination des ressources, de la gestion des fournitures médicales, du transport, de l’hébergement, et de l’organisation générale de la mission. Les bénévoles de cette commission contribuent à assurer une logistique efficace pendant la mission."],
+  ['communication', 'Communication', 'Information, contenus et médias sociaux.', "La commission Communication s’occupe de la diffusion d’informations sur la mission, de la sensibilisation du public, de la création de contenu (photos, vidéos, articles) et de la gestion des médias sociaux. Les bénévoles de cette commission contribuent à faire connaître notre mission et à mobiliser un soutien."],
+  ['technique', 'Technique', 'Patients et coordination médicale.', "La commission Technique s’adresse aux personnes ayant un contact avec les malades et le personnels de la santé. Elle est responsable de la planification et de la réalisation des interventions chirurgicales et des soins médicaux. Les bénévoles de cette commission travaillent directement avec les patients."],
+  ['finance', 'Finance', 'Budget, achats et suivi financier.', "La commission Finance gère le budget de la mission, l’achat, la collecte de fonds, la comptabilité, et la recherche de partenaires financiers. Les bénévoles de cette commission contribuent à assurer la viabilité financière de la mission."],
+  ['sponsoring', 'Sponsoring', 'Partenaires, dons et financements.', "La commission Sponsoring est chargée de rechercher des sponsors et des partenaires pour soutenir la mission. Cela peut inclure la recherche de dons en nature, de fournitures médicales, de services, ou de financements. Les bénévoles de cette commission aident à garantir les ressources nécessaires pour la mission."],
+  ['hebergement', 'Hébergement', 'Logement et accueil des équipes.', "La commission Hébergement est chargée de gérer toute la logistique liée au logement de l’équipe (médecins, organisateurs, bénévoles) durant la mission. Son rôle principal est de rechercher, réserver et répartir les chambres, afin de garantir à chacun un endroit confortable et sécurisé pour se reposer."],
+];
+---
+
+<BaseLayout title="Candidature volontaire — Tolo-Tagnana" description="Candidatez comme volontaire pour la prochaine édition de Tolo-Tagnana.">
+  <a class="skip" href="#form-step">Aller au formulaire</a>
+  <header class="topbar">
+    <a class="brand" href="/"><img src={rotaractMadagasikaraLogo} alt="Rotaract Madagasikara" /></a>
+    <div class="campaign"><img src="/tolotagnana/logo-tolotagnana.png" alt="Tolo-Tagnana" /></div>
+    <a class="close" href="/tolotagnana/" aria-label="Quitter le formulaire">Quitter <span>×</span></a>
+  </header>
+
+  <main class="application-shell">
+    <div class="mobile-progress"><span data-mobile-step>Étape 1 sur 6</span><strong data-mobile-title>Profil</strong></div>
+    <nav class="stepper" aria-label="Progression de la candidature">
+      {steps.map((step, index) => <button type="button" class:list={{ active: index === 0 }} data-step-target={index} aria-current={index === 0 ? 'step' : undefined}><span>{index + 1}</span><small>{step}</small></button>)}
+      <div class="track"><i data-track></i></div>
+    </nav>
+
+    <form data-form data-api-base={apiBase} data-rotaract-clubs={JSON.stringify(rotaractClubs)} data-rotary-clubs={JSON.stringify(rotaryClubs)} novalidate>
+      <section class="step active" data-step="0" id="form-step">
+        <header><p>ÉTAPE 1 · PROFIL</p><h1>Commençons par vous.</h1><span>Ces informations permettront à l’équipe de vous identifier et de vous recontacter.</span></header>
+        <fieldset class="choice-group organization-choice" data-required-choice="organization_type">
+          <legend>Vous êtes membre de quel mouvement ? *</legend>
+          <div class="binary compact"><label><input type="radio" name="organization_type" value="rotaract" /><span><b>Rotaract</b><small>Club Rotaract du District 9220</small></span></label><label><input type="radio" name="organization_type" value="rotary" /><span><b>Rotary</b><small>Club Rotary du District 9220</small></span></label></div>
+          <p class="field-error" data-choice-error hidden>Choisissez Rotary ou Rotaract.</p>
+        </fieldset>
+        <div class="fields two member-fields" data-member-fields hidden>
+          <label><span>Votre club *</span><select name="club_name" required disabled><option value="">Choisissez d’abord Rotary ou Rotaract</option></select><small>Liste issue de l’annuaire du District 9220.</small></label>
+          <fieldset class="choice-group status-choice" data-required-choice="club_status"><legend>Statut par rapport au club *</legend><div class="chips"><label><input type="radio" name="club_status" value="membre" /><span>Membre</span></label><label><input type="radio" name="club_status" value="sympathisant" /><span>Sympathisant·e</span></label><label><input type="radio" name="club_status" value="invite" /><span>Invité·e</span></label></div><p class="field-error" data-choice-error hidden>Choisissez votre statut.</p></fieldset>
+          <label class="wide" data-other-club hidden><span>Nom du club *</span><input name="other_club_name" maxlength="140" placeholder="Saisissez le nom complet du club" /></label>
+          <label><span>Prénom *</span><input name="first_name" autocomplete="given-name" maxlength="80" required /></label>
+          <label><span>Nom *</span><input name="last_name" autocomplete="family-name" maxlength="80" required /></label>
+          <label><span>Adresse e-mail *</span><input type="email" name="email" autocomplete="email" maxlength="180" required /></label>
+          <label><span>Téléphone *</span><input type="tel" name="phone" autocomplete="tel" minlength="6" maxlength="40" placeholder="+261 34 00 000 00" required /></label>
+          <label><span>Ville de résidence</span><input name="city" autocomplete="address-level2" maxlength="120" /></label>
+          <div class="edition-confirmed wide" data-single-edition hidden><small>VOTRE MISSION</small><strong data-single-edition-title></strong><span data-single-edition-dates></span></div>
+          <label class="wide" data-edition-field><span>Édition souhaitée *</span><select name="edition_public_id" required disabled><option value="">Chargement des éditions…</option></select><small data-edition-message>Connexion avec Tolo-Tagnana…</small></label>
+        </div>
+      </section>
+
+      <section class="step" data-step="1">
+        <header><p>ÉTAPE 2 · DISPONIBILITÉ</p><h1>Quand pouvez-vous être présent·e ?</h1><span>Une disponibilité complète facilite l’organisation, mais les disponibilités partielles sont aussi utiles.</span></header>
+        <fieldset class="choice-group" data-required-choice="available_full_mission">
+          <legend>Êtes-vous disponible pendant toute la mission ? *</legend>
+          <div class="binary">
+            <label><input type="radio" name="available_full_mission" value="true" /><span><b>Oui, toute la mission</b><small>Je serai disponible du début à la fin.</small></span></label>
+            <label><input type="radio" name="available_full_mission" value="false" /><span><b>Seulement certains jours</b><small>Je vais préciser mes dates.</small></span></label>
+          </div>
+          <p class="field-error" data-choice-error hidden>Choisissez une disponibilité.</p>
+        </fieldset>
+        <div class="calendar-wrap" data-calendar-wrap hidden>
+          <div class="calendar-head"><div><span>Jours disponibles *</span><strong data-calendar-month>Avril 2027</strong></div><p><i></i> Jour sélectionné</p></div>
+          <div class="weekdays" aria-hidden="true"><span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span></div>
+          <div class="calendar" data-calendar role="group" aria-label="Sélectionnez vos jours disponibles"></div>
+          <p class="field-error" data-date-error hidden>Sélectionnez au moins un jour.</p>
+          <div class="selection-summary"><strong data-date-count>0 jour sélectionné</strong><button type="button" data-clear-dates>Effacer</button></div>
+        </div>
+      </section>
+
+      <section class="step" data-step="2">
+        <header><p>ÉTAPE 3 · EXPÉRIENCE</p><h1>Votre engagement jusqu’ici.</h1><span>Il n’est pas nécessaire d’avoir déjà participé. Cela nous aide simplement à constituer des équipes complémentaires.</span></header>
+        <fieldset class="choice-group" data-required-choice="has_previous_experience">
+          <legend>Avez-vous déjà participé à Tolo-Tagnana ? *</legend>
+          <div class="binary compact"><label><input type="radio" name="has_previous_experience" value="true" /><span><b>Oui</b></span></label><label><input type="radio" name="has_previous_experience" value="false" /><span><b>Pas encore</b></span></label></div>
+          <p class="field-error" data-choice-error hidden>Choisissez une réponse.</p>
+        </fieldset>
+        <div class="experience-list" data-experience-area hidden>
+          <div class="section-label"><span>Éditions précédentes</span><small>Ajoutez les expériences les plus pertinentes.</small></div>
+          <div data-experiences></div>
+          <button class="add" type="button" data-add-experience><span>+</span> Ajouter une expérience</button>
+        </div>
+        <label class="standalone"><span>Autre expérience associative ou événementielle</span><textarea name="engagement_experience" rows="4" maxlength="1000" placeholder="Actions de club, accueil du public, organisation d’événements…"></textarea></label>
+      </section>
+
+      <section class="step" data-step="3">
+        <header><p>ÉTAPE 4 · COMPÉTENCES</p><h1>Où serez-vous le plus utile ?</h1><span>Choisissez vos atouts et vos préférences. L’affectation finale dépendra des besoins de la mission.</span></header>
+        <fieldset class="choice-group" data-required-multiple="preferred_roles"><legend>Rôles préférés *</legend><div class="chips">{roles.map(([value, label]) => <label><input type="checkbox" name="preferred_roles" value={value} /><span>{label}</span></label>)}</div><p class="field-error" data-multiple-error hidden>Choisissez au moins un rôle.</p></fieldset>
+        <fieldset class="choice-group"><legend>Vos compétences</legend><div class="skill-grid">{skills.map(([value, label, detail]) => <label><input type="checkbox" name="skills" value={value} /><span><i>✓</i><b>{label}</b><small>{detail}</small></span></label>)}</div><label class="standalone other-skills"><span>Autres compétences</span><input name="other_skills" maxlength="300" placeholder="Ex. graphisme, mécanique, achats, animation, informatique…" /><small>Séparez plusieurs compétences par une virgule.</small></label></fieldset>
+        <fieldset class="choice-group"><legend>Commissions souhaitées</legend><p class="commission-intro">Nous avons besoin de bénévoles pour diverses commissions. Veuillez indiquer la commission ou les commissions auxquelles vous aimeriez participer en fonction de vos compétences et intérêts. L’icône d’information permet de lire la description complète.</p><div class="commission-grid">{commissions.map(([value, label, description, details], index) => <article class="commission-card"><label><input type="checkbox" name="preferred_commissions" value={value} /><span><i>{String(index + 1).padStart(2, '0')}</i><b>{label}</b><small>{description}</small><em>✓</em></span></label><details><summary aria-label={`En savoir plus sur la commission ${label}`}><i aria-hidden="true">i</i><span>En savoir plus</span></summary><p>{details}</p></details></article>)}</div></fieldset>
+      </section>
+
+      <section class="step" data-step="4">
+        <header><p>ÉTAPE 5 · MOTIVATION</p><h1>Ce qui vous anime.</h1><span>Une réponse courte suffit. Soyez concret·ète et personnel·le.</span></header>
+        <label class="question"><span>Pourquoi souhaitez-vous participer à cette édition ? *</span><textarea name="motivation" rows="6" minlength="20" maxlength="600" required placeholder="Votre motivation en quelques phrases…"></textarea><small><i data-count-for="motivation">0</i> / 600 caractères</small></label>
+        <label class="question"><span>Commentaire <em>(optionnel)</em></span><textarea name="contribution" rows="5" maxlength="500" placeholder="Une précision ou un message pour l’équipe…"></textarea><small><i data-count-for="contribution">0</i> / 500 caractères</small></label>
+      </section>
+
+      <section class="step" data-step="5">
+        <header><p>ÉTAPE 6 · INFORMATIONS PRATIQUES</p><h1>Une dernière vérification.</h1><span>Ces détails nous aident à préparer la logistique et la sécurité de l’équipe.</span></header>
+        <div class="practical">
+          <fieldset class="choice-group" data-required-choice="tshirt_size"><legend>Taille de T-shirt *</legend><div class="size-row">{['XS','S','M','L','XL','XXL'].map((size) => <label><input type="radio" name="tshirt_size" value={size} /><span>{size}</span></label>)}</div><p class="field-error" data-choice-error hidden>Choisissez une taille.</p></fieldset>
+          <fieldset class="choice-group" data-required-choice="dietary_preference"><legend>Préférence alimentaire *</legend><div class="chips"><label><input type="radio" name="dietary_preference" value="aucune" /><span>Aucune restriction</span></label><label><input type="radio" name="dietary_preference" value="sans-porc" /><span>Sans porc</span></label><label><input type="radio" name="dietary_preference" value="vegetarien" /><span>Végétarien</span></label><label><input type="radio" name="dietary_preference" value="vegetalien" /><span>Végétalien</span></label><label><input type="radio" name="dietary_preference" value="halal" /><span>Halal</span></label><label><input type="radio" name="dietary_preference" value="sans-gluten" /><span>Sans gluten</span></label><label><input type="radio" name="dietary_preference" value="sans-lactose" /><span>Sans lactose</span></label><label><input type="radio" name="dietary_preference" value="autre" /><span>Autre</span></label></div><p class="field-error" data-choice-error hidden>Choisissez une préférence.</p><label class="standalone dietary-detail" data-dietary-detail hidden><span>Précisez votre préférence *</span><input name="dietary_details" maxlength="180" placeholder="Décrivez brièvement votre besoin alimentaire" /></label></fieldset>
+          <div class="fields two emergency"><label><span>Contact d’urgence *</span><input name="emergency_contact_name" maxlength="160" placeholder="Nom et relation" required /></label><label><span>Téléphone du contact *</span><input type="tel" name="emergency_contact_phone" minlength="6" maxlength="40" placeholder="+261…" required /></label></div>
+        </div>
+        <div class="review"><div class="review-title"><div><p>RÉCAPITULATIF</p><h2>Votre candidature</h2></div><span>Sauvegardée automatiquement</span></div><div class="review-grid" data-review></div></div>
+        <label class="consent"><input type="checkbox" name="consent" required /><span>J’accepte que mes informations soient utilisées par l’équipe Tolo-Tagnana pour traiter ma candidature et me contacter. *</span></label>
+        <label class="honeypot" aria-hidden="true">Site web<input name="website" tabindex="-1" autocomplete="off" /></label>
+      </section>
+
+      <div class="status" data-status role="alert" hidden></div>
+      <footer class="actions"><button class="back" type="button" data-back disabled>Retour</button><div class="save-state"><span><i>✓</i> <span data-save-state>Brouillon sauvegardé</span></span><button type="button" data-reset>Recommencer</button></div><button class="next" type="button" data-next><span>Continuer</span><b>→</b></button><button class="submit" type="submit" data-submit hidden><span>Envoyer ma candidature</span><b>→</b></button></footer>
+    </form>
+
+    <section class="success" data-success hidden tabindex="-1"><div class="check">✓</div><p>CANDIDATURE ENREGISTRÉE</p><h1>Misaotra.</h1><span data-success-message>Votre candidature a bien été transmise. L’équipe Tolo-Tagnana vous contactera après étude des besoins de la mission.</span><a href="/tolotagnana/">Retour au programme <b>→</b></a></section>
+  </main>
+
+  <script>
+    type Edition = { public_id:string; name:string; place:string; year:number; start_date:string|null; end_date:string|null };
+    type Draft = Record<string, unknown> & { available_dates?: string[]; previous_editions?: {year:string;place:string;role:string}[]; current_step?: number };
+    const form = document.querySelector<HTMLFormElement>('[data-form]');
+    if (form) {
+      const apiBase = form.dataset.apiBase || '';
+      const draftKey = 'tolotagnana-volunteer-draft-v2';
+      const sections = [...form.querySelectorAll<HTMLElement>('[data-step]')];
+      const stepButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-step-target]')];
+      const select = form.elements.namedItem('edition_public_id') as HTMLSelectElement;
+      const clubSelect = form.elements.namedItem('club_name') as HTMLSelectElement;
+      const editionField = form.querySelector<HTMLElement>('[data-edition-field]')!;
+      const singleEdition = form.querySelector<HTMLElement>('[data-single-edition]')!;
+      const memberFields = form.querySelector<HTMLElement>('[data-member-fields]')!;
+      const otherClubField = form.querySelector<HTMLElement>('[data-other-club]')!;
+      const next = form.querySelector<HTMLButtonElement>('[data-next]')!;
+      const back = form.querySelector<HTMLButtonElement>('[data-back]')!;
+      const submit = form.querySelector<HTMLButtonElement>('[data-submit]')!;
+      const status = form.querySelector<HTMLElement>('[data-status]')!;
+      const calendarWrap = form.querySelector<HTMLElement>('[data-calendar-wrap]')!;
+      const calendar = form.querySelector<HTMLElement>('[data-calendar]')!;
+      const experienceArea = form.querySelector<HTMLElement>('[data-experience-area]')!;
+      const experiences = form.querySelector<HTMLElement>('[data-experiences]')!;
+      const dietaryDetail = form.querySelector<HTMLElement>('[data-dietary-detail]')!;
+      let current = 0;
+      let editions: Edition[] = [];
+      let selectedDates = new Set<string>();
+
+      const readDraft = (): Draft => { try { return JSON.parse(localStorage.getItem(draftKey) || '{}'); } catch { return {}; } };
+      const checkedValues = (name:string) => [...form.querySelectorAll<HTMLInputElement>(`[name="${name}"]:checked`)].map((el) => el.value);
+      const fieldValue = (name:string) => (form.elements.namedItem(name) as HTMLInputElement | null)?.value || '';
+      const pretty = (value:string) => value ? value.charAt(0).toUpperCase() + value.slice(1).replaceAll('-', ' ') : 'Non renseigné';
+
+      const populateClubOptions = (type:string, selected = '') => {
+        const clubs = JSON.parse(type === 'rotary' ? form.dataset.rotaryClubs || '[]' : form.dataset.rotaractClubs || '[]') as string[];
+        clubSelect.innerHTML = '<option value="">Choisir votre club</option>';
+        clubs.forEach((club) => { const option = document.createElement('option'); option.value = club; option.textContent = club; clubSelect.append(option); });
+        const other = document.createElement('option'); other.value = '__other__'; other.textContent = 'Autre club non listé'; clubSelect.append(other);
+        clubSelect.disabled = false; clubSelect.value = selected; memberFields.hidden = false; updateClubOther();
+      };
+
+      const updateClubOther = () => { const custom = clubSelect.value === '__other__'; otherClubField.hidden = !custom; const input = otherClubField.querySelector<HTMLInputElement>('input')!; input.required = custom; };
+
+      const serialize = (): Draft => {
+        const data = Object.fromEntries(new FormData(form).entries()) as Draft;
+        ['preferred_roles','skills','preferred_commissions'].forEach((name) => data[name] = checkedValues(name));
+        data.available_full_mission = fieldValue('available_full_mission') === 'true';
+        data.available_dates = [...selectedDates];
+        data.has_previous_experience = fieldValue('has_previous_experience') === 'true';
+        data.previous_editions = [...experiences.querySelectorAll<HTMLElement>('[data-experience]')].map((row) => ({ year:(row.querySelector('[name="experience_year"]') as HTMLInputElement).value, place:(row.querySelector('[name="experience_place"]') as HTMLInputElement).value, role:(row.querySelector('[name="experience_role"]') as HTMLInputElement).value })).filter((item) => item.year || item.place || item.role);
+        data.club_selection = fieldValue('club_name');
+        data.club_name = fieldValue('club_name') === '__other__' ? fieldValue('other_club_name') : fieldValue('club_name');
+        data.current_step = current;
+        data.consent = (form.elements.namedItem('consent') as HTMLInputElement).checked;
+        return data;
+      };
+      let saveTimer:number;
+      const save = () => { window.clearTimeout(saveTimer); const label = form.querySelector<HTMLElement>('[data-save-state]')!; label.textContent = 'Sauvegarde…'; saveTimer = window.setTimeout(() => { localStorage.setItem(draftKey, JSON.stringify(serialize())); label.textContent = 'Brouillon sauvegardé'; }, 250); };
+
+      const addExperience = (value: {year?:string;place?:string;role?:string} = {}) => {
+        const row = document.createElement('div'); row.className = 'experience'; row.dataset.experience = '';
+        row.innerHTML = '<label><span>Année</span><input name="experience_year" inputmode="numeric" maxlength="4" placeholder="2025"></label><label><span>Lieu</span><input name="experience_place" maxlength="100" placeholder="Ambatondrazaka"></label><label><span>Rôle</span><input name="experience_role" maxlength="100" placeholder="Accueil"></label><button type="button" aria-label="Supprimer cette expérience">×</button>';
+        (row.querySelector('[name="experience_year"]') as HTMLInputElement).value = value.year || '';
+        (row.querySelector('[name="experience_place"]') as HTMLInputElement).value = value.place || '';
+        (row.querySelector('[name="experience_role"]') as HTMLInputElement).value = value.role || '';
+        row.querySelector('button')!.addEventListener('click', () => { row.remove(); if (!experiences.children.length) addExperience(); save(); });
+        row.querySelectorAll('input').forEach((input) => input.addEventListener('input', save)); experiences.append(row);
+      };
+
+      const renderCalendar = () => {
+        const edition = editions.find((item) => item.public_id === select.value);
+        let start = edition?.start_date ? new Date(`${edition.start_date}T12:00:00`) : new Date('2027-04-16T12:00:00');
+        let end = edition?.end_date ? new Date(`${edition.end_date}T12:00:00`) : new Date('2027-04-25T12:00:00');
+        if ((end.getTime() - start.getTime()) / 86400000 > 45) end = new Date(start.getTime() + 9 * 86400000);
+        const formatter = new Intl.DateTimeFormat('fr-FR', { month:'long', year:'numeric' });
+        form.querySelector<HTMLElement>('[data-calendar-month]')!.textContent = formatter.format(start).replace(/^./, (c) => c.toUpperCase());
+        calendar.innerHTML = '';
+        const pad = (start.getDay() + 6) % 7; for (let i=0;i<pad;i++) calendar.append(document.createElement('span'));
+        for (let day = new Date(start); day <= end; day = new Date(day.getTime() + 86400000)) {
+          const iso = day.toISOString().slice(0,10); const button = document.createElement('button'); button.type = 'button'; button.dataset.date = iso; button.className = selectedDates.has(iso) ? 'selected' : '';
+          button.innerHTML = `<small>${day.toLocaleDateString('fr-FR',{weekday:'short'}).replace('.','')}</small><b>${day.getDate()}</b>`;
+          button.setAttribute('aria-pressed', String(selectedDates.has(iso))); button.setAttribute('aria-label', day.toLocaleDateString('fr-FR',{dateStyle:'full'}));
+          button.addEventListener('click', () => { selectedDates.has(iso) ? selectedDates.delete(iso) : selectedDates.add(iso); renderCalendar(); save(); }); calendar.append(button);
+        }
+        form.querySelector<HTMLElement>('[data-date-count]')!.textContent = `${selectedDates.size} jour${selectedDates.size > 1 ? 's' : ''} sélectionné${selectedDates.size > 1 ? 's' : ''}`;
+      };
+
+      const updateConditional = () => {
+        const organizationType = fieldValue('organization_type'); memberFields.hidden = !organizationType;
+        updateClubOther();
+        calendarWrap.hidden = fieldValue('available_full_mission') !== 'false';
+        experienceArea.hidden = fieldValue('has_previous_experience') !== 'true';
+        dietaryDetail.hidden = fieldValue('dietary_preference') !== 'autre';
+        dietaryDetail.querySelector<HTMLInputElement>('input')!.required = !dietaryDetail.hidden;
+        if (!experienceArea.hidden && !experiences.children.length) addExperience();
+      };
+      const updateCounters = () => form.querySelectorAll<HTMLTextAreaElement>('textarea[maxlength]').forEach((area) => { const counter = form.querySelector<HTMLElement>(`[data-count-for="${area.name}"]`); if (counter) counter.textContent = String(area.value.length); });
+
+      const restore = () => {
+        const draft = readDraft();
+        const savedOrganization = String(draft.organization_type || '');
+        if (savedOrganization) { const radio = form.querySelector<HTMLInputElement>(`[name="organization_type"][value="${savedOrganization}"]`); if (radio) radio.checked = true; populateClubOptions(savedOrganization, String(draft.club_selection || draft.club_name || '')); }
+        for (const [name, raw] of Object.entries(draft)) {
+          if (Array.isArray(raw) || name === 'available_dates' || name === 'previous_editions') continue;
+          const controls = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(`[name="${name}"]`)];
+          controls.forEach((control) => { if (control instanceof HTMLInputElement && (control.type === 'radio' || control.type === 'checkbox')) control.checked = control.type === 'checkbox' ? raw === true : control.value === String(raw); else control.value = String(raw ?? ''); });
+        }
+        ['preferred_roles','skills','preferred_commissions'].forEach((name) => (draft[name] as string[] || []).forEach((value) => { const input = form.querySelector<HTMLInputElement>(`[name="${name}"][value="${value}"]`); if (input) input.checked = true; }));
+        selectedDates = new Set(draft.available_dates || []); (draft.previous_editions || []).forEach(addExperience); updateConditional(); updateCounters();
+        return Math.max(0, Math.min(5, Number(draft.current_step) || 0));
+      };
+
+      const validateStep = (index:number) => {
+        let valid = true; status.hidden = true;
+        sections[index].querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>('input,textarea,select').forEach((control) => { if (!control.checkValidity() && !control.closest('[hidden]')) { control.setAttribute('aria-invalid','true'); valid = false; } else control.removeAttribute('aria-invalid'); });
+        sections[index].querySelectorAll<HTMLElement>('[data-required-choice]').forEach((group) => { const name = group.dataset.requiredChoice!; const ok = !!form.querySelector(`[name="${name}"]:checked`); group.querySelector<HTMLElement>('[data-choice-error]')!.hidden = ok; if (!ok) valid = false; });
+        sections[index].querySelectorAll<HTMLElement>('[data-required-multiple]').forEach((group) => { const ok = checkedValues(group.dataset.requiredMultiple!).length > 0; group.querySelector<HTMLElement>('[data-multiple-error]')!.hidden = ok; if (!ok) valid = false; });
+        if (index === 1 && fieldValue('available_full_mission') === 'false' && !selectedDates.size) { form.querySelector<HTMLElement>('[data-date-error]')!.hidden = false; valid = false; } else form.querySelector<HTMLElement>('[data-date-error]')!.hidden = true;
+        if (!valid) { status.textContent = 'Quelques informations sont encore nécessaires pour continuer.'; status.hidden = false; sections[index].querySelector<HTMLElement>('[aria-invalid="true"], .field-error:not([hidden])')?.scrollIntoView({behavior:'smooth',block:'center'}); }
+        return valid;
+      };
+
+      const renderReview = () => {
+        const draft = serialize(); const edition = editions.find((item) => item.public_id === draft.edition_public_id);
+        const labels:Record<string,string> = { accueil:'Accueil', enregistrement:'Enregistrement', logistique:'Logistique', interpretariat:'Interprétariat', restauration:'Restauration', communication:'Communication', organisation:'Organisation', 'relation-patient':'Relation patient', 'premiers-secours':'Premiers secours', 'photo-video':'Photo et vidéo', 'reseaux-sociaux':'Réseaux sociaux', traduction:'Traduction', conduite:'Conduite', cuisine:'Cuisine', technique:'Technique', finance:'Finance', sponsoring:'Sponsoring', hebergement:'Hébergement', aucune:'Aucune restriction', 'sans-porc':'Sans porc', vegetarien:'Végétarien', vegetalien:'Végétalien', halal:'Halal', 'sans-gluten':'Sans gluten', 'sans-lactose':'Sans lactose', autre:'Autre' };
+        const list = (value:unknown) => (Array.isArray(value) ? value : []).map((item) => labels[String(item)] || pretty(String(item))).join(', ') || 'Non renseigné';
+        const dates = [...selectedDates].sort().map((date) => new Date(`${date}T12:00:00`).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})).join(', ');
+        const previous = (draft.previous_editions || []).map((item) => [item.year,item.place,item.role].filter(Boolean).join(' · ')).join('\n');
+        const items = [
+          { title:'Profil', step:0, rows:[['Identité',`${draft.first_name || ''} ${draft.last_name || ''}`.trim()],['Contact',[draft.email,draft.phone].filter(Boolean).join(' · ')],['Club',`${pretty(String(draft.organization_type || ''))} · ${draft.club_name || 'Non renseigné'} · ${pretty(String(draft.club_status || ''))}`],['Ville',String(draft.city || 'Non renseignée')]] },
+          { title:'Mission et disponibilité', step:1, rows:[['Édition',edition ? `${edition.name} · ${edition.place} · ${edition.year}` : 'Non renseignée'],['Présence',draft.available_full_mission ? 'Toute la mission' : dates || 'Aucune date sélectionnée']] },
+          { title:'Expérience', step:2, rows:[['Tolo-Tagnana',draft.has_previous_experience ? previous || 'Expérience à préciser' : 'Première participation'],['Autre engagement',String(draft.engagement_experience || 'Non renseigné')]] },
+          { title:'Compétences et préférences', step:3, rows:[['Rôles souhaités',list(draft.preferred_roles)],['Compétences',list(draft.skills)],['Autres compétences',String(draft.other_skills || 'Non renseignées')],['Commissions',list(draft.preferred_commissions)]] },
+          { title:'Motivation', step:4, wide:true, rows:[['Pourquoi participer ?',String(draft.motivation || 'À compléter')],['Commentaire',String(draft.contribution || 'Aucun commentaire')]] },
+          { title:'Informations pratiques', step:5, wide:true, rows:[['T-shirt',String(draft.tshirt_size || 'Non renseigné')],['Alimentation',[labels[String(draft.dietary_preference || '')] || pretty(String(draft.dietary_preference || '')),draft.dietary_details].filter(Boolean).join(' · ')],['Contact d’urgence',[draft.emergency_contact_name,draft.emergency_contact_phone].filter(Boolean).join(' · ') || 'Non renseigné']] },
+        ];
+        const review = form.querySelector<HTMLElement>('[data-review]')!; review.replaceChildren();
+        items.forEach((item) => {
+          const article = document.createElement('article'); const head = document.createElement('div'); const title = document.createElement('h3'); const edit = document.createElement('button'); const details = document.createElement('dl');
+          if (item.wide) article.classList.add('wide');
+          title.textContent = item.title; edit.type = 'button'; edit.dataset.editStep = String(item.step); edit.setAttribute('aria-label',`Modifier la section ${item.title}`); edit.textContent = 'Modifier'; head.className = 'review-card-head'; head.append(title,edit);
+          item.rows.forEach(([label,value]) => { const row=document.createElement('div'); const term=document.createElement('dt'); const description=document.createElement('dd'); term.textContent=String(label); String(value).split('\n').forEach((line,index) => { if(index) description.append(document.createElement('br')); description.append(document.createTextNode(line)); }); row.append(term,description); details.append(row); });
+          article.append(head,details); review.append(article);
+        });
+      };
+
+      const goTo = (index:number) => {
+        current = Math.max(0, Math.min(5,index)); sections.forEach((section,i) => section.classList.toggle('active',i===current)); stepButtons.forEach((button,i) => { button.classList.toggle('active',i===current); button.classList.toggle('done',i<current); button.toggleAttribute('aria-current',i===current); });
+        document.querySelector<HTMLElement>('[data-track]')!.style.transform = `scaleX(${current / 5})`; document.querySelector<HTMLElement>('[data-mobile-step]')!.textContent = `Étape ${current+1} sur 6`; document.querySelector<HTMLElement>('[data-mobile-title]')!.textContent = ['Profil','Disponibilité','Expérience','Compétences','Motivation','Informations pratiques'][current];
+        back.disabled = current===0; next.hidden = current===5; submit.hidden = current!==5; if (current===5) renderReview(); status.hidden = true; window.scrollTo({top:0,behavior:'smooth'});
+      };
+
+      fetch(`${apiBase}/api/public/editions`).then((response) => { if (!response.ok) throw new Error(); return response.json(); }).then((rows:Edition[]) => { editions = rows; select.innerHTML = '<option value="">Choisir une édition</option>'; rows.forEach((edition) => { const option = document.createElement('option'); option.value=edition.public_id; option.textContent=[edition.name,edition.place,edition.year].filter(Boolean).join(' · '); select.append(option); }); select.disabled = false; form.querySelector<HTMLElement>('[data-edition-message]')!.textContent = rows.length ? 'Les éditions ouvertes sont synchronisées avec Tolo-Tagnana.' : 'Aucune édition ouverte actuellement.'; const resumeAt = restore(); if (rows.length === 1) { const edition = rows[0]; select.value = edition.public_id; editionField.hidden = true; singleEdition.hidden = false; singleEdition.querySelector<HTMLElement>('[data-single-edition-title]')!.textContent = `${edition.name} · ${edition.place}`; const dates = edition.start_date && edition.end_date ? `${new Date(`${edition.start_date}T12:00:00`).toLocaleDateString('fr-FR',{day:'numeric',month:'long'})} au ${new Date(`${edition.end_date}T12:00:00`).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}` : String(edition.year); singleEdition.querySelector<HTMLElement>('[data-single-edition-dates]')!.textContent = dates; } renderCalendar(); goTo(resumeAt); }).catch(() => { form.querySelector<HTMLElement>('[data-edition-message]')!.textContent = 'Impossible de charger les éditions. Réessayez plus tard.'; });
+
+      form.addEventListener('input', () => { updateConditional(); updateCounters(); if (current === 5) renderReview(); save(); }); form.addEventListener('change', (event) => { const target = event.target as HTMLInputElement | HTMLSelectElement; if (target.name === 'organization_type') populateClubOptions(target.value); if (target.name === 'club_name') updateClubOther(); updateConditional(); if (target.name === 'edition_public_id') { selectedDates.clear(); renderCalendar(); } if (current === 5) renderReview(); save(); });
+      form.querySelector('[data-add-experience]')!.addEventListener('click', () => { addExperience(); save(); }); form.querySelector('[data-clear-dates]')!.addEventListener('click', () => { selectedDates.clear(); renderCalendar(); save(); });
+      form.querySelector('[data-reset]')!.addEventListener('click', (event) => { const button = event.currentTarget as HTMLButtonElement; if (button.dataset.confirm === 'true') { localStorage.removeItem(draftKey); window.location.reload(); return; } button.dataset.confirm = 'true'; button.textContent = 'Confirmer ?'; window.setTimeout(() => { button.dataset.confirm = 'false'; button.textContent = 'Recommencer'; }, 4000); });
+      next.addEventListener('click', () => { if (validateStep(current)) { goTo(current+1); save(); } }); back.addEventListener('click', () => { goTo(current-1); save(); }); stepButtons.forEach((button) => button.addEventListener('click', () => { const target=Number(button.dataset.stepTarget); if (target < current || validateStep(current)) { goTo(target); save(); } }));
+      form.addEventListener('click', (event) => { const button=(event.target as HTMLElement).closest<HTMLButtonElement>('[data-edit-step]'); if (button) goTo(Number(button.dataset.editStep)); });
+      form.addEventListener('submit', async (event) => { event.preventDefault(); if (!validateStep(5)) return; submit.disabled=true; submit.querySelector('span')!.textContent='Envoi en cours…'; try { const response=await fetch(`${apiBase}/api/volunteers`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(serialize())}); const body=await response.json().catch(()=>({})); if(!response.ok) throw new Error(body.error||'Impossible d’enregistrer la candidature.'); localStorage.removeItem(draftKey); form.hidden=true; const success=document.querySelector<HTMLElement>('[data-success]')!; success.querySelector<HTMLElement>('[data-success-message]')!.textContent=body.confirmation_email_sent?'Votre candidature a bien été transmise. Un e-mail de confirmation vient de vous être envoyé. L’équipe Tolo-Tagnana vous contactera après étude des besoins de la mission.':'Votre candidature a bien été transmise. L’équipe Tolo-Tagnana vous contactera après étude des besoins de la mission.'; success.hidden=false; success.focus(); window.scrollTo({top:0,behavior:'smooth'}); } catch(error) { status.textContent=error instanceof Error?error.message:'Une erreur est survenue.'; status.hidden=false; submit.disabled=false; submit.querySelector('span')!.textContent='Envoyer ma candidature'; } });
+      updateCounters(); goTo(0);
+    }
+  </script>
+</BaseLayout>
+
+<style is:global>
+  :root{--blue:oklch(42% .135 256);--blue-dark:oklch(30% .1 256);--blue-soft:oklch(96% .018 245);--orange:oklch(70% .19 48);--cranberry:oklch(50% .19 355);--ink:oklch(29% .025 255);--muted:oklch(53% .025 255);--line:oklch(89% .018 245);--surface:oklch(99% .006 245);--canvas:oklch(97% .01 245);--success:oklch(52% .13 155)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--canvas);color:var(--ink);font-family:'Source Sans 3',system-ui,sans-serif}.skip{position:fixed;top:-80px;left:1rem;z-index:100;padding:.7rem 1rem;background:var(--surface);color:var(--blue)}.skip:focus{top:1rem}.topbar{height:74px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 4vw;background:var(--surface);border-top:5px solid var(--cranberry);border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:.85rem;text-decoration:none;color:var(--blue)}.brand img{width:122px}.brand span{padding-left:.85rem;border-left:1px solid var(--line);font-size:.65rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.campaign img{display:block;width:165px}.close{justify-self:end;display:flex;align-items:center;gap:.6rem;color:var(--muted);font-size:.85rem;font-weight:700;text-decoration:none}.close span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--blue-soft);color:var(--blue);font-size:1.2rem}.application-shell{max-width:1080px;margin:0 auto;padding:42px 24px 90px}.stepper{position:relative;display:grid;grid-template-columns:repeat(6,1fr);margin:0 0 46px}.stepper button{position:relative;z-index:2;display:grid;justify-items:center;gap:8px;border:0;background:none;color:var(--muted);font:inherit;cursor:pointer}.stepper button>span{display:grid;place-items:center;width:32px;height:32px;border:1px solid var(--line);border-radius:50%;background:var(--surface);font-size:.75rem;font-weight:800;transition:180ms ease-out}.stepper small{font-size:.72rem;font-weight:700}.stepper .active>span{border-color:var(--blue);background:var(--blue);color:var(--surface);box-shadow:0 0 0 5px var(--blue-soft)}.stepper .active small{color:var(--blue)}.stepper .done>span{border-color:var(--blue);color:var(--blue)}.stepper .track{position:absolute;z-index:0;top:15px;left:8.3%;right:8.3%;height:2px;background:var(--line);overflow:hidden}.stepper .track i{display:block;width:100%;height:100%;background:var(--blue);transform:scaleX(0);transform-origin:left;transition:transform 220ms ease-out}.mobile-progress{display:none}form{overflow:hidden;border:1px solid var(--line);border-radius:24px;background:var(--surface);box-shadow:0 20px 60px oklch(30% .08 255 / .08)}.step{display:none;padding:54px 64px 42px}.step.active{display:block}.step>header{max-width:680px;margin-bottom:42px}.step>header p,.review-title p{margin:0 0 8px;color:var(--orange);font-size:.72rem;font-weight:800;letter-spacing:.13em}.step>header h1,.success h1{margin:0;color:var(--blue-dark);font-size:2.35rem;line-height:1.1;letter-spacing:-.025em}.step>header>span,.success>span{display:block;margin-top:13px;color:var(--muted);font-size:1rem;line-height:1.55}.fields{display:grid;gap:22px}.fields.two{grid-template-columns:1fr 1fr}.fields .wide{grid-column:1/-1}label>span,.section-label>span{display:block;margin-bottom:8px;color:var(--blue-dark);font-size:.84rem;font-weight:700}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:13px 14px;color:var(--ink);font:inherit;transition:border-color 160ms ease-out,box-shadow 160ms ease-out}textarea{resize:vertical;line-height:1.5}input:hover,select:hover,textarea:hover{border-color:oklch(74% .045 250)}input:focus,select:focus,textarea:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 4px var(--blue-soft)}[aria-invalid=true]{border-color:var(--cranberry)!important;box-shadow:0 0 0 4px oklch(96% .025 355)!important}label>small{display:block;margin-top:7px;color:var(--muted);font-size:.75rem}.choice-group{margin:0 0 34px;padding:0;border:0}.choice-group legend{margin-bottom:14px;color:var(--blue-dark);font-size:.95rem;font-weight:800}.binary{display:grid;grid-template-columns:1fr 1fr;gap:14px}.binary label,.chips label,.skill-grid label,.size-row label{position:relative}.binary input,.chips input,.skill-grid input,.size-row input{position:absolute;width:1px;height:1px;opacity:0}.binary label>span{display:block;min-height:104px;margin:0;padding:20px;border:1px solid var(--line);border-radius:16px;cursor:pointer;transition:160ms ease-out}.binary b,.binary small{display:block}.binary b{color:var(--blue-dark);font-size:1rem}.binary small{margin-top:7px;color:var(--muted);font-size:.82rem}.binary input:checked+span{border-color:var(--blue);background:var(--blue-soft);box-shadow:0 0 0 2px var(--blue)}.binary input:focus-visible+span,.chips input:focus-visible+span,.skill-grid input:focus-visible+span,.size-row input:focus-visible+span{outline:3px solid var(--orange);outline-offset:2px}.binary.compact{max-width:420px}.binary.compact label>span{min-height:0;text-align:center}.calendar-wrap{padding:24px;border-radius:18px;background:var(--blue-soft)}.calendar-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:20px}.calendar-head span,.calendar-head strong{display:block}.calendar-head span{font-size:.78rem;color:var(--muted)}.calendar-head strong{margin-top:3px;color:var(--blue-dark);font-size:1.15rem}.calendar-head p{margin:0;color:var(--muted);font-size:.72rem}.calendar-head i{display:inline-block;width:9px;height:9px;margin-right:5px;border-radius:50%;background:var(--blue)}.weekdays,.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}.weekdays span{text-align:center;color:var(--muted);font-size:.65rem;font-weight:700}.calendar button{min-height:66px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:var(--blue-dark);cursor:pointer}.calendar button small,.calendar button b{display:block}.calendar button small{text-transform:capitalize;color:var(--muted);font-size:.63rem}.calendar button b{margin-top:3px;font-size:1rem}.calendar button:hover{border-color:var(--blue)}.calendar button.selected{border-color:var(--blue);background:var(--blue);color:var(--surface);box-shadow:0 5px 15px oklch(42% .135 256 / .18)}.calendar button.selected small{color:oklch(90% .03 245)}.selection-summary{display:flex;justify-content:space-between;margin-top:16px;color:var(--blue)}.selection-summary button{border:0;background:none;color:var(--blue);font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}.field-error{margin:9px 0 0;color:var(--cranberry);font-size:.78rem;font-weight:700}.section-label{margin-bottom:12px}.section-label small{color:var(--muted)}.experience-list{margin-bottom:30px}.experience{display:grid;grid-template-columns:.5fr 1fr 1fr auto;gap:12px;align-items:end;margin-bottom:12px;padding:16px;border-radius:16px;background:var(--blue-soft)}.experience button{width:38px;height:44px;border:0;border-radius:10px;background:var(--surface);color:var(--muted);font-size:1.25rem;cursor:pointer}.add{display:flex;align-items:center;gap:9px;border:0;background:none;color:var(--blue);font:inherit;font-weight:800;cursor:pointer}.add span{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:var(--blue);color:var(--surface)}.standalone{display:block;margin-top:28px}.chips{display:flex;flex-wrap:wrap;gap:9px}.chips label>span,.size-row label>span{display:block;margin:0;padding:10px 15px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.82rem;font-weight:700;cursor:pointer}.chips input:checked+span,.size-row input:checked+span{border-color:var(--blue);background:var(--blue);color:var(--surface)}.skill-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.skill-grid label>span{position:relative;display:grid;grid-template-columns:24px 1fr;min-height:83px;margin:0;padding:16px;border:1px solid var(--line);border-radius:15px;cursor:pointer}.skill-grid i{grid-row:1/3;display:grid;place-items:center;align-self:start;width:20px;height:20px;border:1px solid var(--line);border-radius:6px;color:transparent;font-style:normal;font-size:.7rem}.skill-grid b{color:var(--blue-dark);font-size:.87rem}.skill-grid small{color:var(--muted);font-size:.75rem}.skill-grid input:checked+span{border-color:var(--blue);background:var(--blue-soft)}.skill-grid input:checked+span i{border-color:var(--blue);background:var(--blue);color:var(--surface)}.question{display:block;margin-bottom:32px}.question>span{font-size:.95rem}.question>small{text-align:right}.question>small i{font-style:normal}.practical{padding-bottom:34px}.size-row{display:flex;gap:8px}.size-row label>span{min-width:54px;text-align:center}.emergency{margin-top:28px}.review{margin:0 -64px;padding:35px 64px;background:var(--blue-soft)}.review-title{display:flex;justify-content:space-between;align-items:end;margin-bottom:19px}.review-title h2{margin:0;color:var(--blue-dark);font-size:1.3rem}.review-title>span{color:var(--success);font-size:.75rem;font-weight:700}.review-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:15px;overflow:hidden}.review-grid article{display:flex;justify-content:space-between;gap:16px;padding:16px;background:var(--surface)}.review-grid small{color:var(--muted);font-size:.68rem;font-weight:700;text-transform:uppercase}.review-grid p{margin:4px 0 0;line-height:1.4}.review-grid button{align-self:start;border:0;background:none;color:var(--blue);font:inherit;font-size:.75rem;font-weight:800;cursor:pointer}.consent{display:flex;align-items:flex-start;gap:11px;margin-top:28px}.consent input{width:18px;height:18px;flex:0 0 auto;accent-color:var(--blue)}.consent span{margin:0;font-weight:500;line-height:1.45}.honeypot{position:absolute;left:-9999px}.status{margin:0 64px 24px;padding:13px 16px;border-radius:12px;background:oklch(95% .025 355);color:var(--cranberry);font-size:.82rem;font-weight:700}.actions{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:20px 28px;border-top:1px solid var(--line);background:var(--surface)}.actions button{min-height:46px;border:0;border-radius:12px;padding:0 20px;font:800 .85rem 'Source Sans 3',sans-serif;cursor:pointer}.actions .back{justify-self:start;background:var(--blue-soft);color:var(--blue)}.actions .back:disabled{visibility:hidden}.actions .next,.actions .submit{justify-self:end;display:flex;align-items:center;justify-content:space-between;gap:34px;min-width:170px;background:var(--orange);color:var(--blue-dark);box-shadow:0 7px 18px oklch(70% .19 48 / .2)}.actions .next:hover,.actions .submit:hover{filter:brightness(.96)}.actions .submit:disabled{opacity:.6}.save-state{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.73rem}.save-state i{color:var(--success);font-style:normal}.success{max-width:720px;margin:80px auto;padding:64px;border:1px solid var(--line);border-radius:24px;background:var(--surface);text-align:center;box-shadow:0 20px 60px oklch(30% .08 255 / .08)}.success .check{display:grid;place-items:center;width:58px;height:58px;margin:0 auto 25px;border-radius:50%;background:var(--success);color:var(--surface);font-size:1.5rem}.success>p{color:var(--success);font-size:.72rem;font-weight:800;letter-spacing:.13em}.success>span{max-width:550px;margin:14px auto}.success a{display:inline-flex;gap:30px;margin-top:28px;padding:13px 18px;border-radius:12px;background:var(--orange);color:var(--blue-dark);font-weight:800;text-decoration:none}[hidden]{display:none!important}@media(max-width:760px){.topbar{height:64px;grid-template-columns:1fr auto;padding:0 18px}.brand img{width:103px}.brand span,.campaign{display:none}.close{font-size:.75rem}.application-shell{padding:0 0 76px}.stepper{display:none}.mobile-progress{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--surface)}.mobile-progress span{color:var(--muted);font-size:.75rem}.mobile-progress strong{color:var(--blue);font-size:.78rem}form{border:0;border-radius:0;box-shadow:none}.step{padding:36px 20px 28px}.step>header{margin-bottom:32px}.step>header h1{font-size:1.85rem}.fields.two,.binary,.skill-grid{grid-template-columns:1fr}.fields .wide{grid-column:auto}.binary.compact{grid-template-columns:1fr 1fr}.binary label>span{min-height:auto}.calendar-wrap{padding:16px}.calendar button{min-height:54px}.calendar button small{display:none}.experience{grid-template-columns:1fr 1fr}.experience label:nth-child(3){grid-column:1/-1}.experience button{position:absolute;right:36px}.size-row{display:grid;grid-template-columns:repeat(3,1fr)}.review{margin:0 -20px;padding:28px 20px}.review-grid{grid-template-columns:1fr}.review-title>span{display:none}.status{margin:0 20px 18px}.actions{position:fixed;z-index:30;bottom:0;left:0;right:0;grid-template-columns:1fr 1fr;padding:12px 16px;box-shadow:0 -8px 30px oklch(30% .08 255 / .1)}.save-state{position:absolute;right:18px;top:-24px;padding:3px 8px;border-radius:8px;background:var(--surface);box-shadow:0 -3px 12px oklch(30% .08 255 / .08)}.actions .next,.actions .submit{width:100%}.success{margin:32px 18px;padding:45px 24px}}
+  .save-state{gap:10px}.save-state button{min-height:0;padding:0;border-radius:0;background:none;color:var(--blue);font-size:.7rem;text-decoration:underline;box-shadow:none}
+  @media(max-width:760px){.save-state button{display:none}}
+
+  /* Même langage visuel que la page Tolo-Tagnana */
+  :root{--blue:#17458f;--blue-dark:#17458f;--blue-soft:#e9f4fb;--orange:#ff7600;--cranberry:#d41367;--ink:#54565a;--muted:#6d7074;--line:#c8d9e4;--surface:#fdfcfe;--canvas:#f4f6f8;--success:#16835b}
+  .topbar{height:86px;padding-inline:5.5%;border-top-width:6px;border-bottom-color:var(--line)}
+  .brand img{width:128px}.campaign img{width:190px}.close span{border-radius:0}
+  .application-shell{max-width:1180px;padding-top:54px}
+  .stepper{margin-bottom:52px}.stepper button>span{border-radius:50%;box-shadow:none}.stepper .active>span{box-shadow:0 0 0 4px var(--blue-soft)}
+  form{border-radius:0;border-color:var(--line);border-top:7px solid var(--cranberry);box-shadow:none}
+  .step{padding:58px 68px 48px}
+  .step>header p,.review-title p{color:var(--cranberry)}
+  .step>header h1,.success h1{font:600 3.3rem/.95 'Barlow Condensed',Arial,sans-serif;letter-spacing:-.025em;color:var(--royal,var(--blue))}
+  input,select,textarea{border-radius:0;border-color:#b8c5cd;background:var(--surface);padding:14px 15px}
+  input:hover,select:hover,textarea:hover{border-color:var(--azure,#0067c8)}
+  input:focus,select:focus,textarea:focus{border-color:var(--azure,#0067c8);box-shadow:0 0 0 3px #0067c81c}
+  .binary label>span,.skill-grid label>span{border-radius:0}.binary input:checked+span{border:2px solid var(--azure,#0067c8);background:var(--blue-soft);box-shadow:none}
+  .calendar-wrap{border-radius:0;background:var(--blue-soft);border-top:5px solid var(--azure,#0067c8)}
+  .calendar button{border-radius:0}.calendar button.selected{border-color:var(--blue);background:var(--blue);box-shadow:none}
+  .experience{border-radius:0;border-top:3px solid var(--azure,#0067c8)}.experience button{border-radius:0}
+  .add span{border-radius:0;background:var(--orange)}
+  .chips label>span,.size-row label>span{border-radius:0}.chips input:checked+span,.size-row input:checked+span{border-color:var(--blue);background:var(--blue);color:var(--surface)}
+  .skill-grid i{border-radius:0}.review{background:var(--blue-soft);border-top:6px solid var(--azure,#0067c8)}.review-grid{border-radius:0}.status{border-radius:0;border-top:4px solid var(--cranberry)}
+  .actions{padding:24px 32px;background:var(--blue);color:var(--surface);border-top:0}.actions button{border-radius:0}.actions .back{background:transparent;border:1px solid #ffffff80;color:var(--surface)}.actions .next,.actions .submit{background:var(--orange);color:var(--surface);box-shadow:none}.save-state{color:#dbe8f3}.save-state button{color:var(--surface)}
+  .success{border-radius:0;border-top:8px solid var(--cranberry);box-shadow:none}.success .check,.success a{border-radius:0}.success a{background:var(--orange);color:var(--surface)}
+  .status-choice{align-self:end;margin:0}.status-choice legend{margin-bottom:10px}.edition-confirmed{padding:20px 22px;background:var(--blue);color:var(--surface);border-top:6px solid var(--orange)}.edition-confirmed small,.edition-confirmed strong,.edition-confirmed span{display:block}.edition-confirmed small{color:var(--gold,#f7a81b);font-size:.68rem;font-weight:800;letter-spacing:.13em}.edition-confirmed strong{margin-top:7px;font:600 1.55rem 'Barlow Condensed',Arial,sans-serif}.edition-confirmed span{margin-top:3px;color:#dce8f4;font-size:.85rem}
+  .other-skills{margin-top:16px}.commission-intro{max-width:660px;margin:-5px 0 18px;color:var(--muted);font-size:.88rem;line-height:1.5}.commission-grid{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);border-left:1px solid var(--line)}.commission-card{border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.commission-grid label{position:relative}.commission-grid input{position:absolute;width:1px;height:1px;opacity:0}.commission-grid label>span{position:relative;display:grid;grid-template-columns:34px 1fr;min-height:124px;margin:0;padding:21px 58px 18px 21px;cursor:pointer;transition:background 160ms ease-out}.commission-grid label>span>i{grid-row:1/3;color:var(--orange);font-style:normal;font-size:.7rem;font-weight:800}.commission-grid b{color:var(--blue);font:600 1.25rem 'Barlow Condensed',Arial,sans-serif}.commission-grid small{margin-top:7px;color:var(--muted);font-size:.78rem;line-height:1.45}.commission-grid em{position:absolute;right:16px;top:16px;display:grid;place-items:center;width:22px;height:22px;border:1px solid var(--line);color:transparent;font-style:normal}.commission-grid input:checked+span{background:var(--blue-soft);box-shadow:inset 0 4px var(--blue)}.commission-grid input:checked+span em{border-color:var(--blue);background:var(--blue);color:var(--surface)}.commission-grid input:focus-visible+span{outline:3px solid var(--orange);outline-offset:-3px}.commission-card details{padding:0 20px 17px}.commission-card summary{display:inline-flex;align-items:center;gap:7px;color:var(--blue);font-size:.73rem;font-weight:800;cursor:pointer;list-style:none}.commission-card summary::-webkit-details-marker{display:none}.commission-card summary i{display:grid;place-items:center;width:20px;height:20px;border:1px solid var(--blue);border-radius:50%;font-family:Georgia,serif;font-style:italic}.commission-card details p{margin:12px 0 0;padding-top:12px;border-top:1px solid var(--line);color:var(--ink);font-size:.8rem;line-height:1.5}
+  @media(max-width:760px){.topbar{height:72px}.step{padding:42px 7% 34px}.step>header h1{font-size:2.65rem}.actions{padding:12px 16px}.mobile-progress{border-top:4px solid var(--azure,#0067c8)}}
+  @media(max-width:620px){.commission-grid{grid-template-columns:1fr}.commission-grid label>span{min-height:125px}}
+  .question>span em{color:var(--muted);font-size:.8rem;font-weight:500}
+  .review-grid article{display:block;min-width:0;padding:19px 20px}
+  .review-grid article.wide{grid-column:1/-1}
+  .review-card-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+  .review-card-head h3{margin:0;color:var(--blue);font-size:.78rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+  .review-grid .review-card-head button{align-self:auto;flex:0 0 auto;text-decoration:underline;text-underline-offset:3px}
+  .review-grid .review-card-head button:hover{color:var(--cranberry)}
+  .review-grid .review-card-head button:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+  .review-grid dl{display:grid;gap:11px;margin:0}
+  .review-grid dl>div{display:grid;grid-template-columns:minmax(90px,.34fr) 1fr;gap:14px}
+  .review-grid dt{color:var(--muted);font-size:.69rem;font-weight:700;text-transform:uppercase}
+  .review-grid dd{min-width:0;margin:0;color:var(--ink);font-size:.9rem;line-height:1.45;overflow-wrap:anywhere;white-space:pre-line}
+  @media(max-width:760px){.review-grid article.wide{grid-column:auto}.review-grid dl>div{grid-template-columns:1fr;gap:3px}}
+  .brand{gap:0}
+  .brand img{width:170px}
+  @media(max-width:760px){.brand img{width:145px}}
+</style>
