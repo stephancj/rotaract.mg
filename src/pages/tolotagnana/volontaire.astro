@@ -1,10 +1,11 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { clubs } from '../../data/clubs';
 const rotaractMadagasikaraLogo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png';
 
 const apiBase = (import.meta.env.PUBLIC_TOLOTANANA_API_URL || 'http://127.0.0.1:3000').replace(/\/$/, '');
 const steps = ['Profil', 'Disponibilité', 'Expérience', 'Compétences', 'Motivation', 'Validation'];
-const rotaractClubs = ['Rotaract Ankoay', 'Rotaract Ankorondrano', 'Rotaract Faneva', 'Rotaract Amontana', 'Rotaract Athénée Antsirabe', 'Rotaract Hina', 'Rotaract Iloivato', 'Rotaract Mahajanga-Bombacaceae', 'Rotaract Tsinjo'];
+const rotaractClubs = clubs.map((club) => club.name);
 const rotaryClubs = ['Rotary Antananarivo', 'Rotary Antananarivo-Ainga', 'Rotary Antananarivo Ambohitsorohitra', 'Rotary Antananarivo Ankorondrano', 'Rotary Antananarivo-Anosy', 'Rotary Antananarivo-Ivandry', 'Rotary Antananarivo-Mahamasina', 'Rotary Antananarivo Maroloko', 'Rotary Antananarivo-Tsimbaroa', 'Rotary Antananarivo-Vovonana', 'Rotary Fianarantsoa', 'Rotary Ivato', 'Rotary Lac Alaotra', 'Rotary Mahajanga', 'Rotary Manakara', 'Rotary Morondava Baobab', 'Rotary Nosy Be', 'Rotary Tamatave', 'Rotary Toliara'];
 const skills = [
   ['organisation', 'Organisation', 'Planning et coordination'], ['relation-patient', 'Relation patient', 'Accueil et écoute'],

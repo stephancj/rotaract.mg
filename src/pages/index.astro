@@ -1,18 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { clubs } from '../data/clubs';
 
 const rotaractMadagasikaraLogo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png';
-const clubs = [
-  { name: 'Rotaract Ankoay', city: 'Antananarivo', area: 'Tsimbazaza', meeting: 'Samedi · 14h00', email: 'rtcankoay.secretariat@gmail.com', website: 'https://rotaractankoay.wixsite.com/district9220', websiteLabel: 'Site du club' },
-  { name: 'Rotaract Ankorondrano', city: 'Antananarivo', area: 'Tamboho Waterfront', meeting: 'Dimanche · 15h00', email: 'rotaract.ankorondrano@gmail.com', website: '', websiteLabel: '' },
-  { name: 'Rotaract Faneva', city: 'Antananarivo', area: 'Hôtel Restaurant Glacier', meeting: 'Samedi · 13h00', email: 'fanevarotaract@gmail.com', website: '', websiteLabel: '' },
-  { name: 'Rotaract Amontana', city: 'Antananarivo', area: 'Ampasanisadoda', meeting: '2e et 4e vendredi · 18h30', email: 'contact@rotaractamontana.org', website: 'https://www.rotaractamontana.org/', websiteLabel: 'Site du club' },
-  { name: 'Rotaract Athénée Antsirabe', city: 'Antsirabe', area: 'Hôtel Royal Palace', meeting: 'Samedi · 14h00', email: 'rotaract.athenee@gmail.com', website: 'https://rotaractathenee.wordpress.com/', websiteLabel: 'Site du club' },
-  { name: 'Rotaract Hina', city: 'Antananarivo', area: 'Ambondrona', meeting: 'Samedi · 13h30', email: '', website: 'https://rotaryclubtsimbaroa.org/rotaract-hina/', websiteLabel: 'Actualités du club' },
-  { name: 'Rotaract Iloivato', city: 'Antananarivo', area: 'Phô Lounge · Ampasamadinika', meeting: '2e et 4e samedi · 19h00', email: '', website: '', websiteLabel: '' },
-  { name: 'Rotaract Mahajanga-Bombacaceae', city: 'Mahajanga', area: 'Orlando Services · Majunga Be', meeting: 'Samedi · 18h30', email: '', website: '', websiteLabel: '' },
-  { name: 'Rotaract Tsinjo', city: 'Antananarivo', area: 'Madagascar Underground · Antsahavola', meeting: 'Samedi · 13h00', email: 'rctsinjo@gmail.com', website: '', websiteLabel: '' },
-];
 const collectiveActions = [
   { category: 'Santé · Programme interclubs', title: 'Tolo-Tagnana', description: 'Une chaîne humaine mobilisée pour rendre des interventions chirurgicales accessibles gratuitement.', meta: '991 patients accompagnés', href: '/tolotagnana/' },
   { category: 'Santé · End Polio Now', title: 'Agir contre la polio', description: 'Vaccination, sensibilisation des familles et Urban Trail réunissent les clubs autour d’un même objectif : en finir avec la poliomyélite.', meta: 'Vaccination · Urban Trail', href: 'https://www.endpolio.org/fr' },
@@ -45,7 +35,7 @@ const networkEvents = [
       <a href="#clubs">Nos clubs</a>
       <a href="#action">Vie du réseau</a>
     </nav>
-    <a class="header-cta" href="#agir">Agir avec nous <span aria-hidden="true">→</span></a>
+    <a class="header-cta" href="/contact/">Nous contacter <span aria-hidden="true">→</span></a>
   </header>
 
   <main id="contenu">
@@ -66,8 +56,8 @@ const networkEvents = [
           <a class="text-link" href="#mission">Comprendre le Rotaract <span aria-hidden="true">→</span></a>
         </div>
         <ul class="proof-line" aria-label="Repères du réseau">
-          <li><b>9</b> clubs référencés</li>
-          <li><b>3</b> villes représentées</li>
+          <li><b>{clubs.length}</b> clubs référencés</li>
+          <li><b>{new Set(clubs.map((c) => c.city)).size}</b> villes représentées</li>
           <li>District <b>9220</b></li>
         </ul>
       </div>
@@ -127,7 +117,7 @@ const networkEvents = [
         <button class="clear-filters" type="button" hidden>Effacer</button>
       </div>
 
-      <p class="club-results" aria-live="polite"><b id="club-count">4</b> <span id="club-count-label">clubs affichés sur 9</span></p>
+      <p class="club-results" aria-live="polite"><b id="club-count">4</b> <span id="club-count-label">clubs affichés sur {clubs.length}</span></p>
       <div class="club-grid">
         {clubs.map((club, index) => (
           <article class="club-card" data-index={index} data-city={club.city} data-search={`${club.name} ${club.city} ${club.area}`.toLowerCase()}>
@@ -136,13 +126,13 @@ const networkEvents = [
             <dl><div><dt>Lieu</dt><dd>{club.area}</dd></div><div><dt>Réunion indicative</dt><dd>{club.meeting}</dd></div></dl>
             <div class="club-links">
               {club.website && <a href={club.website} target="_blank" rel="noreferrer">{club.websiteLabel} <span aria-hidden="true">↗</span></a>}
-              {club.email ? <a href={`mailto:${club.email}`}>Écrire au club <span aria-hidden="true">→</span></a> : !club.website && <a href="mailto:hello@rotaract.mg?subject=Contact%20club%20Rotaract">Demander le contact <span aria-hidden="true">→</span></a>}
+              {club.email ? <a href={`mailto:${club.email}`}>Écrire au club <span aria-hidden="true">→</span></a> : !club.website && <a href={`/contact/?objet=rejoindre&club=${encodeURIComponent(club.name)}`}>Demander le contact <span aria-hidden="true">→</span></a>}
             </div>
           </article>
         ))}
       </div>
       <p class="no-results" hidden>Aucun club ne correspond à votre recherche. Essayez une autre ville ou effacez le terme saisi.</p>
-      <button class="show-all" type="button" aria-expanded="false">Voir les 9 clubs <span aria-hidden="true">↓</span></button>
+      <button class="show-all" type="button" aria-expanded="false">Voir les {clubs.length} clubs <span aria-hidden="true">↓</span></button>
     </section>
 
     <section class="collective" id="action">
@@ -176,7 +166,7 @@ const networkEvents = [
               </div>
             </article>
           ))}
-          <a class="events-contact" href="mailto:hello@rotaract.mg?subject=Calendrier%20du%20réseau%20Rotaract">Demander le prochain calendrier <span aria-hidden="true">→</span></a>
+          <a class="events-contact" href="https://tally.so/r/yPQ6lp" target="_blank" rel="noreferrer">Demander le prochain calendrier <span aria-hidden="true">↗</span></a>
         </aside>
       </div>
     </section>
@@ -190,8 +180,8 @@ const networkEvents = [
       <ol class="participation-list">
         <li><span>01</span><div><h3>Rejoindre un club</h3><p>Découvrez le club le plus proche et contactez directement son équipe.</p></div><a href="#clubs">Trouver un club →</a></li>
         <li><span>02</span><div><h3>Participer à une première réunion</h3><p>Venez rencontrer les membres, découvrir le fonctionnement du club et poser vos questions.</p></div><a href="#clubs">Voir les coordonnées →</a></li>
-        <li><span>03</span><div><h3>Construire un partenariat</h3><p>Associez votre organisation, votre expertise ou vos moyens à une initiative locale ou nationale.</p></div><a href="mailto:hello@rotaract.mg?subject=Proposition%20de%20partenariat">Proposer un partenariat →</a></li>
-        <li><span>04</span><div><h3>Contacter la coordination</h3><p>Pour une demande nationale, institutionnelle ou média, écrivez directement à l’équipe Madagascar.</p></div><a href="mailto:hello@rotaract.mg?subject=Contact%20Rotaract%20Madagascar">Nous écrire →</a></li>
+        <li><span>03</span><div><h3>Construire un partenariat</h3><p>Associez votre organisation, votre expertise ou vos moyens à une initiative locale ou nationale.</p></div><a href="https://tally.so/r/yPQ6lp" target="_blank" rel="noreferrer">Proposer un partenariat ↗</a></li>
+        <li><span>04</span><div><h3>Contacter la coordination</h3><p>Pour une demande nationale, institutionnelle ou média, utilisez le formulaire de coordination.</p></div><a href="https://tally.so/r/yPQ6lp" target="_blank" rel="noreferrer">Contacter la coordination ↗</a></li>
       </ol>
     </section>
 
@@ -228,7 +218,7 @@ const networkEvents = [
         <h2>Le réseau</h2>
         <a href="https://www.rotary.org/fr/get-involved/rotaract-clubs" target="_blank" rel="noreferrer">Rotaract International <span aria-hidden="true">↗</span></a>
         <a href="https://gouverneurdistrict9220.org/" target="_blank" rel="noreferrer">District 9220 <span aria-hidden="true">↗</span></a>
-        <a href="mailto:hello@rotaract.mg">hello@rotaract.mg</a>
+        <a href="/contact/">Nous contacter</a>
       </div>
       <div class="footer-cta">
         <span>Prêt à passer à l’action ?</span>

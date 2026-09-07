@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png';
+const joinFormUrl = 'https://tally.so/r/gDIOel';
+const nationalContactFormUrl = 'https://tally.so/r/yPQ6lp';
+const requestedRoute = Astro.url.searchParams.get('objet');
+const requestedClub = Astro.url.searchParams.get('club');
+const routes = [
+  { id: 'rejoindre', number: '01', title: 'Rejoindre un club', description: 'Vous souhaitez découvrir le Rotaract, assister à une première réunion ou trouver le club le plus proche.', action: 'Remplir le formulaire', href: joinFormUrl, color: 'blue' },
+  { id: 'partenariat', number: '02', title: 'Construire un partenariat', description: 'Vous représentez une organisation, une entreprise ou une institution et souhaitez agir à nos côtés.', action: 'Parler d’un partenariat', href: nationalContactFormUrl, color: 'gold' },
+  { id: 'medias', number: '03', title: 'Contacter les médias', description: 'Pour une interview, un communiqué, une photo ou une information sur le mouvement et ses actions.', action: 'Écrire à la coordination', href: nationalContactFormUrl, color: 'powder' },
+  { id: 'projet', number: '04', title: 'Proposer un projet', description: 'Vous avez une idée, un besoin identifié ou une initiative qui pourrait mobiliser un ou plusieurs clubs.', action: 'Partager une idée', href: nationalContactFormUrl, color: 'cranberry' },
+];
+---
+
+<BaseLayout title="Contacter Rotaract Madagascar" description="Rejoignez un club, proposez un partenariat ou contactez la coordination Rotaract Madagascar.">
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Rotaract Madagascar, accueil"><img src={logo} alt="Rotaract Madagasikara" /></a>
+    <nav aria-label="Navigation principale"><a href="/#mission">Découvrir</a><a href="/#clubs">Nos clubs</a><a href="/#action">Vie du réseau</a></nav>
+    <a class="header-cta active" href="/contact/">Nous contacter <span aria-hidden="true">→</span></a>
+  </header>
+
+  <main id="contenu">
+    <section class="contact-hero">
+      <div class="contact-copy">
+        <p class="eyebrow">ROTARACT MADAGASIKARA · DISTRICT 9220</p>
+        <h1>Parlons de votre <em>prochaine étape.</em></h1>
+        <p>Vous n’avez pas besoin de déjà connaître quelqu’un. Choisissez simplement la bonne porte d’entrée, nous vous orienterons vers l’équipe concernée.</p>
+        {requestedClub && <p class="club-note"><strong>{requestedClub}</strong> : votre demande sera orientée vers ce club.</p>}
+        <p class="form-assurance"><span aria-hidden="true">✓</span> Votre demande sera transmise à la coordination et suivie dans un espace sécurisé.</p>
+      </div>
+      <div class="route-map" aria-hidden="true">
+        <svg viewBox="0 0 560 390" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M42 196H180M180 196C255 196 238 54 340 54H510M180 196C255 196 238 144 340 144H510M180 196C255 196 238 246 340 246H510M180 196C255 196 238 336 340 336H510" />
+          <circle cx="42" cy="196" r="15" class="start" /><circle cx="180" cy="196" r="15" class="start" />
+          <circle cx="340" cy="54" r="17" class="blue" /><circle cx="340" cy="144" r="17" class="gold" /><circle cx="340" cy="246" r="17" class="powder" /><circle cx="340" cy="336" r="17" class="cranberry" />
+        </svg>
+        <ol><li>Rejoindre un club</li><li>Construire un partenariat</li><li>Contacter les médias</li><li>Proposer un projet</li></ol>
+      </div>
+    </section>
+
+    <section class="routes" aria-labelledby="routes-title">
+      <header><p class="eyebrow dark">CHOISIR UNE PORTE D’ENTRÉE</p><h2 id="routes-title">Une demande claire, <em>une équipe à vos côtés.</em></h2></header>
+      <ol>
+        {routes.map((route) => (
+          <li class:list={[route.color, { selected: requestedRoute === route.id }]}>
+            <span class="route-dot" aria-hidden="true"></span><span class="route-number">{route.number}</span>
+            <div><h3>{route.title}</h3><p>{route.description}</p></div>
+            <a href={route.href} target="_blank" rel="noreferrer">{route.action} <span aria-hidden="true">↗</span></a>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="contact-process">
+      <div><p class="eyebrow dark">CE QUI SE PASSE ENSUITE</p><h2>Votre message arrive à la coordination nationale.</h2></div>
+      <div><p>La coordination lit votre demande et la transmet à la personne ou au club le plus à même de vous répondre. Pour une demande urgente, précisez-le dans l’objet de votre message.</p><p class="tally-note">Les formulaires intégrés seront ajoutés ici dès que le compte Tally et les adresses de réception partagées auront été configurés.</p></div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div><img src={logo} alt="Rotaract Madagasikara" /><p>La camaraderie par le service.</p></div><a href="/">Retour à l’accueil <span aria-hidden="true">→</span></a></footer>
+</BaseLayout>
+
+<style>
+  :global(:root){--cranberry:#d41367;--blue:#17458f;--gold:#f7a81b;--powder:#b9d9eb;--paper:#fdfcfe;--ink:#213d68;--muted:#566b85;--line:#d9dee5}
+  :global(*){box-sizing:border-box}:global(body){margin:0;background:var(--paper);color:var(--ink);font-family:'Open Sans',Arial,sans-serif}:global(a:focus-visible){outline:3px solid var(--gold);outline-offset:4px}.skip-link{position:fixed;top:-5rem;left:1rem;z-index:10;background:var(--paper);color:var(--blue);padding:.8rem 1rem;font-weight:800}.skip-link:focus{top:1rem}
+  .site-header{display:grid;grid-template-columns:auto 1fr auto;align-items:center;min-height:5.5rem;padding:.85rem clamp(1.25rem,6vw,6.5rem);border-top:.38rem solid var(--cranberry);border-bottom:1px solid var(--line);background:var(--paper)}.brand img{display:block;height:3.25rem;width:auto}.site-header nav{display:flex;justify-content:flex-end;gap:clamp(1rem,2.5vw,2.5rem);margin:auto clamp(1rem,3vw,3rem) auto auto}.site-header nav a{color:var(--ink);font-size:.9rem;font-weight:700;text-decoration:none}.header-cta{display:inline-flex;align-items:center;gap:1.5rem;min-height:3rem;padding:.8rem 1rem;background:var(--cranberry);color:var(--paper);font-weight:800;text-decoration:none}.header-cta:hover{background:var(--blue)}
+  .contact-hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(22rem,.9fr);min-height:39rem;background:var(--cranberry);color:var(--paper)}.contact-copy{display:flex;flex-direction:column;justify-content:center;padding:clamp(4rem,8vw,7rem)}.eyebrow{margin:0 0 1.5rem;color:var(--gold);font-size:.72rem;font-weight:800;letter-spacing:.13em}.eyebrow.dark{color:var(--cranberry)}h1,h2,h3,p{margin-top:0}.contact-copy h1{max-width:11ch;margin-bottom:1.5rem;font-size:clamp(3.6rem,6.2vw,6.6rem);line-height:.91;letter-spacing:-.06em;text-wrap:balance}.contact-copy h1 em{color:var(--gold);font-style:normal}.contact-copy>p{max-width:38rem;font-size:1.1rem;line-height:1.65}.club-note{border-top:1px solid rgb(255 255 255/.45);padding-top:1rem}.form-assurance{display:flex;gap:.7rem;align-items:flex-start;max-width:29rem;margin:2.25rem 0 0;border-top:2px solid var(--gold);padding-top:1rem;font-size:.9rem!important;font-weight:700}.form-assurance span{color:var(--gold);font-size:1.1rem;line-height:1.3}.route-map{display:grid;grid-template-columns:1fr auto;align-items:center;gap:1.25rem;padding:clamp(2rem,4vw,4rem) clamp(1.5rem,4vw,4rem) clamp(2rem,0vw,2rem) 0}.route-map svg{width:min(100%,35rem);overflow:visible}.route-map path{stroke:var(--paper);stroke-width:3}.route-map circle{stroke:var(--paper);stroke-width:5}.route-map .start,.route-map .cranberry{fill:var(--cranberry)}.route-map .blue{fill:var(--blue)}.route-map .gold{fill:var(--gold)}.route-map .powder{fill:var(--powder)}.route-map ol{display:grid;gap:2.9rem;margin:0;padding:0;list-style:none;font-size:clamp(.85rem,1.4vw,1.15rem);font-weight:800;white-space:nowrap}
+  .routes{padding:clamp(5rem,9vw,8rem) clamp(1.35rem,8vw,8rem)}.routes header{display:grid;grid-template-columns:minmax(0,1fr) minmax(18rem,.85fr);gap:2rem;margin-bottom:3.5rem}.routes h2,.contact-process h2{max-width:12ch;margin:0;font-size:clamp(3rem,5vw,5.4rem);line-height:.95;letter-spacing:-.055em;text-wrap:balance}.routes h2 em{color:var(--cranberry);font-style:normal}.routes ol{margin:0;padding:0;border-top:2px solid var(--blue);list-style:none}.routes li{display:grid;grid-template-columns:1.5rem 3rem minmax(0,1fr) auto;gap:1.25rem;align-items:center;padding:1.6rem 0;border-bottom:1px solid var(--line)}.route-dot{width:1rem;height:1rem;border-radius:50%;background:var(--blue)}.gold .route-dot{background:var(--gold)}.powder .route-dot{background:var(--powder)}.cranberry .route-dot{background:var(--cranberry)}.route-number{color:var(--muted);font-size:.75rem;font-weight:800}.routes h3{margin:0 0 .3rem;font-size:clamp(1.35rem,2.2vw,2rem);letter-spacing:-.035em}.routes p{max-width:47rem;margin:0;color:var(--muted);line-height:1.5}.routes a{display:inline-flex;gap:1rem;align-items:center;min-height:2.75rem;color:var(--cranberry);font-weight:800;text-decoration:none;white-space:nowrap}.routes a:hover{color:var(--blue)}.routes li.selected{background:color-mix(in srgb,var(--powder) 35%,transparent)}
+  .contact-process{display:grid;grid-template-columns:minmax(16rem,.9fr) minmax(0,1.1fr);gap:clamp(3rem,9vw,9rem);padding:clamp(4rem,8vw,7rem) clamp(1.35rem,8vw,8rem);background:var(--powder)}.contact-process h2{font-size:clamp(2.5rem,4.4vw,4.6rem)}.contact-process>div:last-child{max-width:42rem;font-size:1.08rem;line-height:1.65}.tally-note{margin:2rem 0 0;border-top:1px solid var(--blue);padding-top:1rem;font-size:.88rem;font-weight:700}.site-footer{display:flex;justify-content:space-between;gap:2rem;align-items:end;padding:3rem clamp(1.35rem,8vw,8rem);background:var(--blue);color:var(--paper)}.site-footer img{display:block;width:13rem;max-width:100%;background:var(--paper)}.site-footer p{margin:.9rem 0 0;color:var(--gold);font-weight:800}.site-footer a{color:var(--paper);font-weight:800;text-decoration:none}
+  @media(max-width:800px){.site-header{grid-template-columns:auto auto}.site-header nav{display:none}.contact-hero,.contact-process{grid-template-columns:1fr}.contact-copy{padding:4.5rem 1.35rem 3rem}.route-map{padding:1rem 1.35rem 3rem;grid-template-columns:1fr}.route-map svg{width:90%;justify-self:start}.route-map ol{gap:1rem;margin-left:2.2rem}.routes header{grid-template-columns:1fr}.routes li{grid-template-columns:1.25rem 2rem 1fr}.routes li>a{grid-column:3;justify-self:start}.site-footer{align-items:start;flex-direction:column}.contact-copy h1{font-size:clamp(3.3rem,14vw,4.6rem)}}
+  @media(prefers-reduced-motion:reduce){:global(html){scroll-behavior:auto}}
+</style>
