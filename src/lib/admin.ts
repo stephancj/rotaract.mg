@@ -12,7 +12,14 @@ let instance: PocketBase | null = null;
  * Utilisé uniquement côté client (scripts des pages `/admin/*`).
  */
 export function getAdminPb(): PocketBase {
-  if (!instance) instance = new PocketBase(PB_URL);
+  if (!instance) {
+    instance = new PocketBase(PB_URL);
+    // Désactive l'annulation auto du SDK : le tableau de bord charge
+    // plusieurs listes en parallèle, parfois vers la même collection
+    // (ex : clubs + sélecteur des formulaires) — sinon la seconde
+    // requête annule la première (erreur statut 0).
+    instance.autoCancellation(false);
+  }
   return instance;
 }
 
