@@ -443,9 +443,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     .catch(() => { /* redirection déjà effectuée */ });
 </script>
 
-<style>
+<style is:global>
+  /* Styles globaux (et non scopés) : les lignes et champs du tableau de bord
+     sont générés en JS et ne recevraient pas l'attribut de scope Astro. */
   :global(:root){--cranberry:#d41367;--blue:#17458f;--gold:#f7a81b;--paper:#ffffff;--ink:#54565a;--muted:#657f99;--line:#d0cfcd;--bg:#eef2f6}
   :global(*){box-sizing:border-box}:global(body){margin:0;background:var(--bg);color:var(--ink);font-family:'Open Sans',Arial,sans-serif}
+  [hidden]{display:none!important}
   :global(a:focus-visible),:global(button:focus-visible),:global(input:focus-visible),:global(textarea:focus-visible),:global(select:focus-visible){outline:3px solid var(--gold);outline-offset:2px}
   .skip-link{position:fixed;top:-5rem;left:1rem;z-index:10;background:var(--paper);color:var(--blue);padding:.8rem 1rem;font-weight:800}
   .skip-link:focus{top:1rem}
