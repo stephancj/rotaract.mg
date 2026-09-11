@@ -1,0 +1,471 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Administration — Rotaract Madagascar" description="Portail d’administration du site Rotaract Madagascar. Accès réservé.">
+  <meta name="robots" content="noindex,nofollow" slot="head" />
+  <a class="skip-link" href="#admin-list">Aller à la liste</a>
+
+  <header class="admin-header">
+    <div>
+      <p class="eyebrow">ROTARACT.MG · PORTAIL ADMIN</p>
+      <h1>Gérer le contenu du site</h1>
+    </div>
+    <div class="session">
+      <span id="session-email" title="Compte connecté">…</span>
+      <button type="button" id="logout">Se déconnecter</button>
+    </div>
+  </header>
+
+  <p class="deploy-note"><strong>Publication :</strong> le site est généré à chaque déploiement. Vos modifications seront visibles en ligne après le prochain déploiement (rebuild).</p>
+
+  <nav class="tabs" aria-label="Contenus administrables">
+    <button type="button" data-tab="clubs" aria-selected="true">Clubs <b id="count-clubs">·</b></button>
+    <button type="button" data-tab="actions" aria-selected="false">Actions des clubs <b id="count-actions">·</b></button>
+    <button type="button" data-tab="events" aria-selected="false">Événements des clubs <b id="count-events">·</b></button>
+  </nav>
+
+  <main class="admin-main">
+    <div class="toolbar">
+      <p id="resource-hint"></p>
+      <button type="button" id="create-btn">＋ Nouveau</button>
+    </div>
+    <p class="loading" id="loading">Chargement…</p>
+    <p class="empty" id="empty" hidden>Aucun élément pour le moment. Créez le premier avec le bouton ci-dessus.</p>
+    <ul class="records" id="admin-list"></ul>
+  </main>
+
+  <dialog id="editor" aria-labelledby="editor-title">
+    <form id="editor-form" novalidate>
+      <header><h2 id="editor-title">Modifier</h2><button type="button" id="editor-close" aria-label="Fermer">×</button></header>
+      <div class="fields" id="editor-fields"></div>
+      <p class="form-error" id="editor-error" role="alert" hidden></p>
+      <footer>
+        <button type="button" class="secondary" id="editor-cancel">Annuler</button>
+        <button type="submit" id="editor-save">Enregistrer</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</BaseLayout>
+
+<script>
+  import { adminLogout, ensureAdminSession, getAdminPb } from '../../lib/admin';
+  import {
+    RMG_ACTIONS_COLLECTION,
+    RMG_CLUBS_COLLECTION,
+    RMG_EVENTS_COLLECTION,
+  } from '../../lib/pocketbase';
+
+  type FieldType = 'text' | 'textarea' | 'email' | 'url' | 'number' | 'date' | 'club' | 'checkbox';
+  type Field = { name: string; label: string; type: FieldType; required?: boolean; hint?: string; rows?: number };
+  type Row = Record<string, any>;
+  type ClubOption = { id: string; name: string };
+  type Resource = {
+    key: string;
+    collection: string;
+    plural: string;
+    singular: string;
+    hint: string;
+    titleField: string;
+    sort: string;
+    subtitle: (row: Row) => string;
+    orderRows?: (rows: Row[]) => Row[];
+    fields: Field[];
+  };
+
+  const formatShortDate = (iso: unknown) => {
+    const day = String(iso ?? '').slice(0, 10);
+    if (!day) return '';
+    return new Date(`${day}T12:00:00`).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Indian/Antananarivo',
+    });
+  };
+  const byDateDescTitle = (a: Row, b: Row) => {
+    const da = String(a.date ?? '').slice(0, 10);
+    const db = String(b.date ?? '').slice(0, 10);
+    if (!da && !db) return String(a.title ?? '').localeCompare(String(b.title ?? ''), 'fr');
+    if (!da) return 1;
+    if (!db) return -1;
+    return db.localeCompare(da);
+  };
+
+  const RESOURCES: Resource[] = [
+    {
+      key: 'clubs',
+      collection: RMG_CLUBS_COLLECTION,
+      plural: 'Clubs',
+      singular: 'club',
+      hint: 'Annuaire affiché dans « Trouvez votre club » et fiches /clubs/[slug]. Décochez « Visible » pour masquer sans supprimer.',
+      titleField: 'name',
+      sort: 'sort_order,name',
+      subtitle: (r) => [r.city, r.meeting, r.slug ? `/${r.slug}` : ''].filter(Boolean).join(' · '),
+      fields: [
+        { name: 'name', label: 'Nom du club', type: 'text', required: true },
+        { name: 'slug', label: 'Slug (URL)', type: 'text', required: true, hint: 'Minuscules, chiffres, tirets. Ne plus changer après création.' },
+        { name: 'city', label: 'Ville', type: 'text' },
+        { name: 'area', label: 'Lieu / quartier', type: 'text' },
+        { name: 'meeting', label: 'Réunion indicative', type: 'text' },
+        { name: 'meeting_address', label: 'Adresse de réunion', type: 'text' },
+        { name: 'president', label: 'Présidence', type: 'text' },
+        { name: 'email', label: 'E-mail', type: 'email' },
+        { name: 'phone', label: 'Téléphone', type: 'text' },
+        { name: 'website', label: 'Site web (URL)', type: 'url' },
+        { name: 'website_label', label: 'Libellé du lien site', type: 'text' },
+        { name: 'facebook', label: 'Facebook (URL)', type: 'url' },
+        { name: 'instagram', label: 'Instagram (URL)', type: 'url' },
+        { name: 'description', label: 'Présentation', type: 'textarea', rows: 4 },
+        { name: 'verified_at', label: 'Coordonnées vérifiées', type: 'text', hint: 'Ex : Janvier 2026' },
+        { name: 'sort_order', label: 'Ordre d’affichage', type: 'number' },
+        { name: 'active', label: 'Visible sur le site', type: 'checkbox' },
+      ],
+    },
+    {
+      key: 'actions',
+      collection: RMG_ACTIONS_COLLECTION,
+      plural: 'Actions des clubs',
+      singular: 'action',
+      hint: 'Actions menées par les clubs, affichées dans « Dernières activités ». Laissez le club vide pour une action interclubs / commune.',
+      titleField: 'title',
+      sort: '-created',
+      subtitle: (r) => [clubNameOf(r) || 'Interclubs', formatShortDate(r.date), r.lieu].filter(Boolean).join(' · '),
+      orderRows: (list) => [...list].sort(byDateDescTitle),
+      fields: [
+        { name: 'title', label: 'Titre', type: 'text', required: true },
+        { name: 'club', label: 'Club organisateur', type: 'club', hint: 'Vide = interclubs / action commune.' },
+        { name: 'date', label: 'Date de l’action', type: 'date' },
+        { name: 'lieu', label: 'Lieu', type: 'text' },
+        { name: 'category', label: 'Catégorie', type: 'text', hint: 'Ex : Santé · Programme interclubs' },
+        { name: 'description', label: 'Description', type: 'textarea', rows: 3, required: true },
+        { name: 'meta', label: 'Repère', type: 'text', hint: 'Ex : 120 patients accompagnés' },
+        { name: 'href', label: 'Lien', type: 'text', hint: 'URL complète ou chemin interne' },
+        { name: 'image', label: 'Image', type: 'text', hint: 'Chemin ou URL' },
+        { name: 'image_alt', label: 'Texte alternatif de l’image', type: 'text' },
+        { name: 'active', label: 'Visible sur le site', type: 'checkbox' },
+      ],
+    },
+    {
+      key: 'events',
+      collection: RMG_EVENTS_COLLECTION,
+      plural: 'Événements des clubs',
+      singular: 'événement',
+      hint: 'Événements à venir affichés dans « Prochainement ». Laissez le club vide pour un événement interclubs / commun.',
+      titleField: 'title',
+      sort: '-created',
+      subtitle: (r) => [clubNameOf(r) || 'Interclubs', formatShortDate(r.date) || 'Date à confirmer', r.lieu].filter(Boolean).join(' · '),
+      orderRows: (list) => [...list].sort(byDateDescTitle),
+      fields: [
+        { name: 'title', label: 'Titre', type: 'text', required: true },
+        { name: 'club', label: 'Club organisateur', type: 'club', hint: 'Vide = interclubs / événement commun.' },
+        { name: 'date', label: 'Date de l’événement', type: 'date' },
+        { name: 'lieu', label: 'Lieu', type: 'text' },
+        { name: 'cadence', label: 'Rythme', type: 'text', hint: 'Ex : Chaque année (optionnel si date précise)' },
+        { name: 'scope', label: 'Portée', type: 'text', hint: 'Ex : District 9220' },
+        { name: 'description', label: 'Description', type: 'textarea', rows: 3, required: true },
+        { name: 'href', label: 'Lien « En savoir plus »', type: 'text' },
+        { name: 'active', label: 'Visible sur le site', type: 'checkbox' },
+      ],
+    },
+  ];
+
+  const pb = getAdminPb();
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+  const list = document.querySelector<HTMLElement>('#admin-list')!;
+  const loading = document.querySelector<HTMLElement>('#loading')!;
+  const empty = document.querySelector<HTMLElement>('#empty')!;
+  const hint = document.querySelector<HTMLElement>('#resource-hint')!;
+  const createBtn = document.querySelector<HTMLButtonElement>('#create-btn')!;
+  const dialog = document.querySelector<HTMLDialogElement>('#editor')!;
+  const dialogTitle = document.querySelector<HTMLElement>('#editor-title')!;
+  const dialogFields = document.querySelector<HTMLElement>('#editor-fields')!;
+  const dialogError = document.querySelector<HTMLElement>('#editor-error')!;
+  const dialogForm = document.querySelector<HTMLFormElement>('#editor-form')!;
+  const saveBtn = document.querySelector<HTMLButtonElement>('#editor-save')!;
+  const toast = document.querySelector<HTMLElement>('#toast')!;
+
+  let activeKey = 'clubs';
+  let rows: Row[] = [];
+  let clubOptions: ClubOption[] = [];
+  let editingId: string | null = null;
+  let slugTouched = false;
+
+  const active = () => RESOURCES.find((r) => r.key === activeKey)!;
+  const clubNameOf = (row: Row) =>
+    clubOptions.find((c) => c.id === row.club)?.name ?? '';
+  const esc = (v: unknown) =>
+    String(v ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;');
+
+  let toastTimer = 0;
+  const notify = (message: string) => {
+    toast.textContent = message;
+    toast.hidden = false;
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => { toast.hidden = true; }, 3500);
+  };
+
+  const goLogin = () => window.location.replace('/admin/login/');
+  const handleAuthError = (err: any) => {
+    if (err?.status === 401 || err?.status === 403) { pb.authStore.clear(); goLogin(); return true; }
+    return false;
+  };
+
+  async function loadAll() {
+    loading.hidden = false;
+    empty.hidden = true;
+    list.replaceChildren();
+    try {
+      const [data, clubs] = await Promise.all([
+        pb.collection(active().collection).getFullList({ sort: active().sort }),
+        pb.collection(RMG_CLUBS_COLLECTION).getFullList({ sort: 'name' }),
+      ]);
+      rows = (data as unknown as Row[]);
+      clubOptions = (clubs as unknown as Row[]).map((c) => ({ id: String(c.id), name: String(c.name ?? '') }));
+      if (active().orderRows) rows = active().orderRows!(rows);
+      const count = document.querySelector<HTMLElement>(`#count-${activeKey}`);
+      if (count) count.textContent = String(rows.length);
+      render();
+    } catch (err) {
+      if (!handleAuthError(err)) notify('Chargement impossible. Vérifiez la connexion.');
+    } finally {
+      loading.hidden = true;
+    }
+  }
+
+  function render() {
+    hint.textContent = active().hint;
+    createBtn.textContent = `＋ Nouveau ${active().singular}`;
+    empty.hidden = rows.length !== 0;
+    list.replaceChildren();
+    rows.forEach((row) => {
+      const li = document.createElement('li');
+      li.className = 'record';
+      const visible = row.active !== false;
+      li.innerHTML =
+        `<span class="dot ${visible ? 'on' : 'off'}" title="${visible ? 'Visible' : 'Masqué'}"></span>` +
+        `<div class="record-copy"><strong>${esc(row[active().titleField] || '(sans titre)')}</strong>` +
+        `<span>${esc(active().subtitle(row))}</span></div>` +
+        `<span class="badge ${visible ? 'on' : 'off'}">${visible ? 'Visible' : 'Masqué'}</span>` +
+        `<div class="record-actions"><button type="button" data-edit>Modifier</button>` +
+        `<button type="button" data-delete class="danger">Supprimer</button></div>`;
+      li.querySelector('[data-edit]')!.addEventListener('click', () => openEditor(row));
+      li.querySelector('[data-delete]')!.addEventListener('click', () => removeRow(row));
+      list.append(li);
+    });
+  }
+
+  function fieldInput(field: Field, value: unknown): string {
+    const v = esc(value ?? (field.type === 'checkbox' ? false : ''));
+    const req = field.required ? ' required' : '';
+    const hintHtml = field.hint ? `<small>${esc(field.hint)}</small>` : '';
+    if (field.type === 'textarea') {
+      return `<label class="wide"><span>${esc(field.label)}${field.required ? ' *' : ''}</span><textarea name="${field.name}" rows="${field.rows ?? 3}"${req}>${v}</textarea>${hintHtml}</label>`;
+    }
+    if (field.type === 'checkbox') {
+      const checked = value === true || value === 'true' || value === 1 ? ' checked' : '';
+      return `<label class="check"><input type="checkbox" name="${field.name}"${checked} /><span>${esc(field.label)}</span>${hintHtml}</label>`;
+    }
+    if (field.type === 'club') {
+      const options = [`<option value="">Interclubs / commun</option>`, ...clubOptions.map((c) =>
+        `<option value="${esc(c.id)}"${String(value ?? '') === c.id ? ' selected' : ''}>${esc(c.name)}</option>`)].join('');
+      return `<label><span>${esc(field.label)}${field.required ? ' *' : ''}</span><select name="${field.name}">${options}</select>${hintHtml}</label>`;
+    }
+    if (field.type === 'date') {
+      return `<label><span>${esc(field.label)}${field.required ? ' *' : ''}</span><input type="date" name="${field.name}" value="${esc(String(value ?? '').slice(0, 10))}"${req} />${hintHtml}</label>`;
+    }
+    const inputType = field.type === 'number' ? 'number' : field.type === 'email' ? 'email' : field.type === 'url' ? 'url' : 'text';
+    return `<label><span>${esc(field.label)}${field.required ? ' *' : ''}</span><input type="${inputType}" name="${field.name}" value="${v}"${req} />${hintHtml}</label>`;
+  }
+
+  function openEditor(row?: Row) {
+    const res = active();
+    editingId = row?.id ?? null;
+    slugTouched = Boolean(row);
+    dialogTitle.textContent = row ? `Modifier ${res.singular}` : `Nouveau ${res.singular}`;
+    dialogError.hidden = true;
+    dialogFields.replaceChildren();
+    const maxOrder = rows.reduce((m, r) => Math.max(m, Number(r.sort_order) || 0), 0);
+    res.fields.forEach((field) => {
+      let value: unknown = row?.[field.name];
+      if (!row && field.name === 'active') value = true;
+      if (!row && field.name === 'sort_order') value = maxOrder + 1;
+      const wrap = document.createElement('div');
+      wrap.innerHTML = fieldInput(field, value);
+      wrap.querySelectorAll('input,textarea').forEach((el) => {
+        if ((el as HTMLInputElement).name === 'slug') {
+          el.addEventListener('input', () => { slugTouched = true; });
+        }
+      });
+      dialogFields.append(wrap.firstElementChild!);
+    });
+    // Slug auto à partir du nom (création uniquement, jusqu'à saisie manuelle).
+    if (!row && res.key === 'clubs') {
+      const nameInput = dialogFields.querySelector<HTMLInputElement>('input[name="name"]');
+      const slugInput = dialogFields.querySelector<HTMLInputElement>('input[name="slug"]');
+      nameInput?.addEventListener('input', () => {
+        if (slugTouched || !slugInput) return;
+        slugInput.value = nameInput.value.toLowerCase().normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      });
+    }
+    dialog.showModal();
+  }
+
+  function closeEditor() {
+    dialog.close();
+    dialogForm.reset();
+  }
+
+  dialogForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    dialogError.hidden = true;
+    const res = active();
+    const payload: Record<string, any> = {};
+    let valid = true;
+    res.fields.forEach((field) => {
+      const control = dialogForm.elements.namedItem(field.name) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+      if (!control) return;
+      if (field.type === 'checkbox') {
+        payload[field.name] = (control as HTMLInputElement).checked;
+      } else if (field.type === 'number') {
+        payload[field.name] = control.value === '' ? null : Number(control.value);
+      } else if (field.type === 'date' || field.type === 'club') {
+        payload[field.name] = control.value === '' ? null : control.value;
+      } else {
+        payload[field.name] = control.value.trim();
+      }
+      if (field.required && !payload[field.name]) {
+        control.setAttribute('aria-invalid', 'true');
+        valid = false;
+      } else {
+        control.removeAttribute('aria-invalid');
+      }
+    });
+    if (!valid) {
+      dialogError.textContent = 'Les champs marqués d’une * sont obligatoires.';
+      dialogError.hidden = false;
+      return;
+    }
+    saveBtn.disabled = true;
+    try {
+      if (editingId) {
+        await pb.collection(res.collection).update(editingId, payload);
+        notify(`${res.singular} mis à jour.`);
+      } else {
+        await pb.collection(res.collection).create(payload);
+        notify(`${res.singular} créé.`);
+      }
+      closeEditor();
+      await loadAll();
+    } catch (err: any) {
+      if (!handleAuthError(err)) {
+        const detail = err?.data?.data ? Object.values(err.data.data).map((d: any) => d?.message).filter(Boolean).join(' ') : '';
+        dialogError.textContent = detail || 'Enregistrement impossible. Vérifiez les champs.';
+        dialogError.hidden = false;
+      }
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
+  async function removeRow(row: Row) {
+    const res = active();
+    const label = String(row[res.titleField] || 'cet élément');
+    if (!window.confirm(`Supprimer définitivement « ${label} » ?`)) return;
+    try {
+      await pb.collection(res.collection).delete(row.id);
+      notify('Élément supprimé.');
+      await loadAll();
+    } catch (err) {
+      if (!handleAuthError(err)) notify('Suppression impossible.');
+    }
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      activeKey = tab.dataset.tab!;
+      tabs.forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+      loadAll();
+    });
+  });
+
+  document.querySelector('#editor-close')!.addEventListener('click', closeEditor);
+  document.querySelector('#editor-cancel')!.addEventListener('click', closeEditor);
+  document.querySelector('#logout')!.addEventListener('click', adminLogout);
+  createBtn.addEventListener('click', () => openEditor());
+
+  // Garde : sans session admin valide, retour au login.
+  ensureAdminSession()
+    .then((email) => {
+      document.querySelector('#session-email')!.textContent = email;
+      loadAll();
+    })
+    .catch(() => { /* redirection déjà effectuée */ });
+</script>
+
+<style>
+  :global(:root){--cranberry:#d41367;--blue:#17458f;--gold:#f7a81b;--paper:#ffffff;--ink:#54565a;--muted:#657f99;--line:#d0cfcd;--bg:#eef2f6}
+  :global(*){box-sizing:border-box}:global(body){margin:0;background:var(--bg);color:var(--ink);font-family:'Open Sans',Arial,sans-serif}
+  :global(a:focus-visible),:global(button:focus-visible),:global(input:focus-visible),:global(textarea:focus-visible),:global(select:focus-visible){outline:3px solid var(--gold);outline-offset:2px}
+  .skip-link{position:fixed;top:-5rem;left:1rem;z-index:10;background:var(--paper);color:var(--blue);padding:.8rem 1rem;font-weight:800}
+  .skip-link:focus{top:1rem}
+  .admin-header{display:flex;justify-content:space-between;align-items:end;gap:1.5rem;padding:2rem clamp(1.25rem,5vw,4rem) 1rem}
+  .eyebrow{margin:0 0 .4rem;color:var(--cranberry);font-size:.7rem;font-weight:800;letter-spacing:.12em}
+  h1{margin:0;color:var(--blue);font-size:clamp(1.6rem,3.5vw,2.4rem);letter-spacing:-.03em}
+  .session{display:flex;align-items:center;gap:.8rem;font-size:.82rem}
+  .session span{max-width:16rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-weight:700}
+  .session button{border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:.55rem .9rem;font:inherit;font-size:.8rem;font-weight:800;cursor:pointer}
+  .session button:hover{border-color:var(--cranberry);color:var(--cranberry)}
+  .deploy-note{margin:0 clamp(1.25rem,5vw,4rem);padding:.8rem 1rem;background:#fff8e1;border-left:.3rem solid var(--gold);font-size:.85rem;line-height:1.5}
+  .tabs{display:flex;gap:.5rem;margin:1.25rem clamp(1.25rem,5vw,4rem) 0}
+  .tabs button{border:1px solid var(--line);border-bottom:0;background:#dde5ee;color:var(--blue);padding:.8rem 1.2rem;font:inherit;font-size:.88rem;font-weight:800;cursor:pointer}
+  .tabs button[aria-selected="true"]{background:var(--paper);box-shadow:inset 0 .25rem var(--cranberry)}
+  .tabs b{color:var(--cranberry);font-weight:800}
+  .admin-main{margin:0 clamp(1.25rem,5vw,4rem) 4rem;background:var(--paper);border:1px solid var(--line);padding:1.5rem clamp(1rem,3vw,2rem) 2rem}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1.25rem}
+  .toolbar p{margin:0;max-width:46rem;color:var(--muted);font-size:.85rem;line-height:1.5}
+  #create-btn{flex:0 0 auto;min-height:3rem;padding:.7rem 1.1rem;border:0;background:var(--cranberry);color:var(--paper);font:inherit;font-weight:800;cursor:pointer;white-space:nowrap}
+  #create-btn:hover{background:var(--blue)}
+  .loading,.empty{margin:0;padding:2rem 0;text-align:center;color:var(--muted);font-weight:700}
+  .records{margin:0;padding:0;list-style:none;border-top:2px solid var(--blue)}
+  .record{display:grid;grid-template-columns:auto 1fr auto auto;gap:1rem;align-items:center;padding:1rem 0;border-bottom:1px solid var(--line)}
+  .dot{width:.7rem;height:.7rem;border-radius:50%;background:var(--muted)}
+  .dot.on{background:#16835b}.dot.off{background:#b0b7c0}
+  .record-copy{display:grid;gap:.15rem;min-width:0}
+  .record-copy strong{color:var(--blue);font-size:1rem;overflow-wrap:anywhere}
+  .record-copy span{color:var(--muted);font-size:.8rem;overflow-wrap:anywhere}
+  .badge{font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:.3rem .6rem}
+  .badge.on{background:#e3f3ec;color:#16835b}.badge.off{background:#eceff3;color:var(--muted)}
+  .record-actions{display:flex;gap:.5rem}
+  .record-actions button{min-height:2.75rem;padding:.5rem .9rem;border:1px solid var(--blue);background:transparent;color:var(--blue);font:inherit;font-size:.8rem;font-weight:800;cursor:pointer}
+  .record-actions button:hover{background:var(--blue);color:var(--paper)}
+  .record-actions .danger{border-color:#c0c7d1;color:var(--muted)}
+  .record-actions .danger:hover{background:var(--cranberry);border-color:var(--cranberry);color:var(--paper)}
+  dialog{width:min(38rem,calc(100vw - 2rem));border:0;border-top:.4rem solid var(--cranberry);padding:0}
+  dialog::backdrop{background:rgb(23 69 143/.45)}
+  #editor-form header{display:flex;justify-content:space-between;align-items:center;padding:1.25rem 1.5rem;border-bottom:1px solid var(--line)}
+  #editor-form h2{margin:0;color:var(--blue);font-size:1.25rem}
+  #editor-close{border:0;background:transparent;font-size:1.6rem;line-height:1;cursor:pointer;color:var(--muted);padding:.4rem .6rem}
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:1.5rem}
+  .fields label{display:grid;gap:.35rem;font-size:.78rem;font-weight:800;color:var(--blue)}
+  .fields label.wide{grid-column:1/-1}
+  .fields label.check{grid-column:1/-1;display:flex;align-items:center;gap:.7rem;font-size:.9rem;cursor:pointer}
+  .fields input[type="text"],.fields input[type="email"],.fields input[type="url"],.fields input[type="number"],.fields input[type="date"],.fields select,.fields textarea{width:100%;padding:.65rem .8rem;border:1px solid var(--line);font:inherit;font-weight:400;color:var(--ink);background:var(--paper)}
+  .fields input[type="checkbox"]{width:1.25rem;height:1.25rem;accent-color:var(--cranberry)}
+  .fields small{font-weight:400;color:var(--muted)}
+  .fields [aria-invalid="true"]{border-color:var(--cranberry)}
+  .form-error{margin:0 1.5rem;padding:.8rem 1rem;background:#fde7ef;color:#a30e4e;font-size:.85rem;font-weight:700}
+  #editor-form footer{display:flex;justify-content:flex-end;gap:.75rem;padding:1.25rem 1.5rem;border-top:1px solid var(--line)}
+  #editor-form footer button{min-height:3rem;padding:.7rem 1.25rem;border:0;background:var(--cranberry);color:var(--paper);font:inherit;font-weight:800;cursor:pointer}
+  #editor-form footer button:hover{background:var(--blue)}
+  #editor-form footer .secondary{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:50;background:var(--blue);color:var(--paper);padding:.9rem 1.4rem;font-weight:800;font-size:.88rem;box-shadow:0 1rem 2.5rem rgb(0 0 0/.25)}
+  @media(max-width:640px){.admin-header{flex-direction:column;align-items:start}.toolbar{flex-direction:column;align-items:stretch}.record{grid-template-columns:auto 1fr;grid-auto-rows:auto}.record-actions{grid-column:2}.fields{grid-template-columns:1fr}}
+</style>

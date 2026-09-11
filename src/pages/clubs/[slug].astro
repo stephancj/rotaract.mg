@@ -1,0 +1,163 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getClubs, getClubBySlug } from '../../lib/pocketbase';
+import type { Club } from '../../data/clubs';
+
+export async function getStaticPaths() {
+  const clubs = await getClubs();
+  return clubs.map((club) => ({ params: { slug: club.slug }, props: { club } }));
+}
+
+const { slug } = Astro.params;
+// Donnée déjà fournie par getStaticPaths ; re-fetch (PocketBase puis fallback)
+// uniquement si la page est rendue hors pré-génération.
+const club = ((Astro.props as { club?: Club }).club ?? (await getClubBySlug(slug ?? '')));
+
+if (!club) {
+  return Astro.redirect('/#clubs');
+}
+
+const clubs = await getClubs();
+const siblings = clubs.filter((c) => c.slug !== club.slug && c.city === club.city).slice(0, 3);
+const others = (siblings.length ? siblings : clubs.filter((c) => c.slug !== club.slug)).slice(0, 3);
+
+const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png';
+const title = `${club.name} — Club Rotaract à ${club.city} | Rotaract Madagascar`;
+const description = club.description?.trim()
+  || `Rencontrez ${club.name}, club Rotaract à ${club.city} (${club.area}). Réunion indicative : ${club.meeting}. Contactez le club avant votre première visite.`;
+---
+
+<BaseLayout title={title} description={description}>
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Rotaract Madagascar, accueil"><img src={logo} alt="Rotaract Madagasikara" /></a>
+    <nav aria-label="Navigation principale"><a href="/#mission">Découvrir</a><a href="/#clubs">Nos clubs</a><a href="/#action">Vie du réseau</a></nav>
+    <a class="header-cta" href="/contact/">Nous contacter <span aria-hidden="true">→</span></a>
+  </header>
+
+  <main id="contenu">
+    <nav class="breadcrumb" aria-label="Fil d’Ariane">
+      <a href="/">Accueil</a><span aria-hidden="true">·</span>
+      <a href="/#clubs">Nos clubs</a><span aria-hidden="true">·</span>
+      <span aria-current="page">{club.name}</span>
+    </nav>
+
+    <section class="club-hero">
+      <div>
+        <p class="eyebrow">CLUB ROTARACT · {club.city.toUpperCase()} · DISTRICT 9220</p>
+        <h1>{club.name}</h1>
+        {club.description?.trim()
+          ? <p class="lead">{club.description}</p>
+          : <p class="lead">Un club Rotaract à {club.city}. Venez rencontrer l’équipe, découvrir ses projets et assister à une première réunion.</p>}
+        <div class="hero-actions">
+          {club.email
+            ? <a class="button primary" href={`mailto:${club.email}`}>Écrire au club <span aria-hidden="true">→</span></a>
+            : <a class="button primary" href={`/contact/?objet=rejoindre&club=${encodeURIComponent(club.name)}`}>Demander le contact <span aria-hidden="true">→</span></a>}
+          <a class="button ghost" href="/#clubs">Voir tous les clubs</a>
+        </div>
+      </div>
+      <aside class="facts" aria-label="Informations pratiques">
+        <h2>Informations pratiques</h2>
+        <dl>
+          <div><dt>Ville</dt><dd>{club.city}</dd></div>
+          <div><dt>Lieu</dt><dd>{club.meeting_address?.trim() || club.area}</dd></div>
+          <div><dt>Réunion indicative</dt><dd>{club.meeting}</dd></div>
+          {club.president?.trim() && <div><dt>Présidence</dt><dd>{club.president}</dd></div>}
+          {club.email && <div><dt>E-mail</dt><dd><a href={`mailto:${club.email}`}>{club.email}</a></dd></div>}
+          {club.phone?.trim() && <div><dt>Téléphone</dt><dd><a href={`tel:${club.phone.replace(/\s/g, '')}`}>{club.phone}</a></dd></div>}
+          <div><dt>Coordonnées vérifiées</dt><dd>{club.verifiedAt}</dd></div>
+        </dl>
+        <p class="notice">Les lieux et horaires peuvent évoluer : contactez le club avant votre première visite.</p>
+        <div class="fact-links">
+          {club.website && <a href={club.website} target="_blank" rel="noreferrer">{club.websiteLabel || 'Site du club'} <span aria-hidden="true">↗</span></a>}
+          {club.facebook?.trim() && <a href={club.facebook} target="_blank" rel="noreferrer">Facebook <span aria-hidden="true">↗</span></a>}
+          {club.instagram?.trim() && <a href={club.instagram} target="_blank" rel="noreferrer">Instagram <span aria-hidden="true">↗</span></a>}
+        </div>
+      </aside>
+    </section>
+
+    <section class="steps" aria-label="Prochaines étapes">
+      <ol>
+        <li><span>01</span><div><h2>Contactez le club</h2><p>Présentez-vous et demandez à assister à une réunion ou à une action ouverte.</p></div></li>
+        <li><span>02</span><div><h2>Venez rencontrer l’équipe</h2><p>Découvrez l’ambiance du club, son fonctionnement et ses projets en cours.</p></div></li>
+        <li><span>03</span><div><h2>Engagez-vous à votre rythme</h2><p>Les modalités d’adhésion sont présentées clairement par le club avant tout engagement.</p></div></li>
+      </ol>
+    </section>
+
+    {others.length > 0 && (
+      <section class="siblings" aria-label="Autres clubs">
+        <header><h2>Découvrir d’autres clubs</h2><a href="/#clubs">Tout l’annuaire →</a></header>
+        <div class="sibling-grid">
+          {others.map((other, i) => (
+            <a class="sibling-card" href={`/clubs/${other.slug}/`}>
+              <span class="sibling-index">{String(i + 1).padStart(2, '0')} · {other.city}</span>
+              <strong>{other.name}</strong>
+              <span class="sibling-meta">{other.area} · {other.meeting}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </main>
+
+  <footer class="site-footer">
+    <div><img src={logo} alt="Rotaract Madagasikara" /><p>La camaraderie par le service.</p></div>
+    <a href="/#clubs">Retour à l’annuaire <span aria-hidden="true">→</span></a>
+  </footer>
+</BaseLayout>
+
+<style>
+  :global(:root){--cranberry:#d41367;--blue:#17458f;--gold:#f7a81b;--powder:#b9d9eb;--paper:#ffffff;--ink:#54565a;--muted:#657f99;--line:#d0cfcd}
+  :global(*){box-sizing:border-box}:global(body){margin:0;background:var(--paper);color:var(--ink);font-family:'Open Sans',Arial,sans-serif}
+  :global(a:focus-visible){outline:3px solid var(--gold);outline-offset:3px}
+  .skip-link{position:fixed;top:-5rem;left:1rem;z-index:10;background:var(--paper);color:var(--blue);padding:.8rem 1rem;font-weight:800}
+  .skip-link:focus{top:1rem}
+  .site-header{display:grid;grid-template-columns:auto 1fr auto;align-items:center;min-height:5.5rem;padding:.85rem clamp(1.25rem,6vw,6.5rem);border-top:.38rem solid var(--cranberry);border-bottom:1px solid var(--line);background:var(--paper)}
+  .brand img{display:block;height:3.25rem;width:auto}
+  .site-header nav{display:flex;justify-content:flex-end;gap:clamp(1rem,2.5vw,2.5rem);margin:auto clamp(1rem,3vw,3rem) auto auto}
+  .site-header nav a{color:var(--ink);font-size:.9rem;font-weight:700;text-decoration:none}
+  .header-cta{display:inline-flex;align-items:center;gap:1.5rem;min-height:3rem;padding:.8rem 1rem;background:var(--cranberry);color:var(--paper);font-weight:800;text-decoration:none}
+  .breadcrumb{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;padding:1.25rem clamp(1.35rem,8vw,8rem);background:var(--paper);font-size:.85rem;font-weight:700}
+  .breadcrumb a{color:var(--blue);text-decoration:none}
+  .club-hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(20rem,.85fr);gap:clamp(2.5rem,6vw,5rem);padding:clamp(3rem,7vw,6rem) clamp(1.35rem,8vw,8rem);background:var(--blue);color:var(--paper)}
+  .eyebrow{margin:0 0 1.25rem;color:var(--gold);font-size:.72rem;font-weight:800;letter-spacing:.13em}
+  .club-hero h1{margin:0;max-width:12ch;font-size:clamp(2.8rem,5.5vw,5.2rem);line-height:.95;letter-spacing:-.05em;text-wrap:balance}
+  .lead{max-width:40rem;margin:1.5rem 0 0;font-size:1.1rem;line-height:1.65;color:#e8eef6}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:1rem;margin-top:2.25rem}
+  .button{display:inline-flex;align-items:center;gap:1rem;min-height:3rem;padding:.8rem 1.05rem;font-weight:800;text-decoration:none}
+  .button.primary{background:var(--gold);color:var(--blue)}
+  .button.ghost{border:1px solid rgb(255 255 255/.6);color:var(--paper)}
+  .facts{background:var(--paper);color:var(--ink);padding:2rem;align-self:start}
+  .facts h2{margin:0 0 1.25rem;color:var(--blue);font-size:1rem;letter-spacing:.06em;text-transform:uppercase}
+  .facts dl{margin:0;display:grid;gap:1rem}
+  .facts dl>div{display:grid;gap:.2rem;border-top:1px solid var(--line);padding-top:.8rem}
+  .facts dt{font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .facts dd{margin:0;font-weight:700;line-height:1.45;overflow-wrap:anywhere}
+  .facts dd a{color:var(--cranberry)}
+  .notice{margin:1.25rem 0 0;font-size:.85rem;line-height:1.55;color:var(--muted)}
+  .fact-links{display:flex;flex-wrap:wrap;gap:.75rem 1.25rem;margin-top:1.25rem;border-top:1px solid var(--line);padding-top:1.25rem}
+  .fact-links a{color:var(--cranberry);font-weight:800;font-size:.88rem;text-decoration:none}
+  .steps{padding:clamp(3rem,6vw,5rem) clamp(1.35rem,8vw,8rem)}
+  .steps ol{margin:0;padding:0;border-top:2px solid var(--blue);list-style:none}
+  .steps li{display:grid;grid-template-columns:3rem 1fr;gap:1.25rem;padding:1.5rem 0;border-bottom:1px solid var(--line)}
+  .steps li>span{color:var(--cranberry);font-size:.75rem;font-weight:800}
+  .steps h2{margin:0 0 .3rem;color:var(--blue);font-size:1.2rem}
+  .steps p{margin:0;max-width:44rem;color:var(--muted);line-height:1.55}
+  .siblings{padding:0 clamp(1.35rem,8vw,8rem) clamp(4rem,7vw,6rem)}
+  .siblings header{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;border-bottom:2px solid var(--blue);padding-bottom:1rem}
+  .siblings h2{margin:0;color:var(--blue);font-size:1.4rem;letter-spacing:-.02em}
+  .siblings header a{color:var(--cranberry);font-weight:800;text-decoration:none;white-space:nowrap}
+  .sibling-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-top:0}
+  .sibling-card{display:grid;gap:.5rem;background:var(--paper);padding:1.5rem;color:var(--ink);text-decoration:none}
+  .sibling-card:hover strong{color:var(--cranberry)}
+  .sibling-index{color:var(--cranberry);font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .sibling-card strong{color:var(--blue);font-size:1.15rem;letter-spacing:-.02em}
+  .sibling-meta{color:var(--muted);font-size:.85rem}
+  .site-footer{display:flex;justify-content:space-between;gap:2rem;align-items:end;padding:3rem clamp(1.35rem,8vw,8rem);background:var(--blue);color:var(--paper)}
+  .site-footer img{display:block;width:13rem;max-width:100%;background:var(--paper)}
+  .site-footer p{margin:.9rem 0 0;color:var(--gold);font-weight:800}
+  .site-footer a{color:var(--paper);font-weight:800;text-decoration:none}
+  @media(max-width:900px){.club-hero{grid-template-columns:1fr}.sibling-grid{grid-template-columns:1fr}}
+  @media(max-width:800px){.site-header{grid-template-columns:auto auto}.site-header nav{display:none}.site-footer{align-items:start;flex-direction:column}}
+</style>

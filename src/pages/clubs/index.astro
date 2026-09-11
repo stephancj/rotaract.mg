@@ -1,0 +1,33 @@
+---
+import { getClubs } from '../../lib/pocketbase';
+
+const clubs = await getClubs();
+const cities = [...new Set(clubs.map((c) => c.city))].sort((a, b) => a.localeCompare(b, 'fr'));
+const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png';
+---
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Annuaire des clubs Rotaract de Madagascar, District 9220." />
+    <title>Nos clubs — Rotaract Madagascar</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <main>
+      <p><a href="/#clubs">← Retour à l’annuaire sur la page d’accueil</a></p>
+      <h1>Nos clubs Rotaract</h1>
+      {cities.map((city) => (
+        <section>
+          <h2>{city}</h2>
+          <ul>
+            {clubs.filter((c) => c.city === city).map((club) => (
+              <li><a href={`/clubs/${club.slug}/`}>{club.name}</a> — {club.area} · {club.meeting}</li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </main>
+  </body>
+</html>

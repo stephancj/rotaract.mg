@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro check && astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "db:setup": "node scripts/setup-rmg-clubs.mjs && node scripts/setup-rmg-program.mjs && node scripts/setup-rmg-users.mjs"
+  },
+  "dependencies": {
+    "pocketbase": "^0.21.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
