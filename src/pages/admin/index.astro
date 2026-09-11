@@ -30,6 +30,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <p id="resource-hint"></p>
       <button type="button" id="create-btn">＋ Nouveau</button>
     </div>
+    <div class="load-error" id="load-error" hidden>
+      <p><strong>Chargement impossible.</strong> <span id="load-error-detail"></span></p>
+      <button type="button" id="load-retry">Réessayer</button>
+    </div>
     <p class="loading" id="loading">Chargement…</p>
     <p class="empty" id="empty" hidden>Aucun élément pour le moment. Créez le premier avec le bouton ci-dessus.</p>
     <ul class="records" id="admin-list"></ul>
@@ -186,10 +190,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   const dialogForm = document.querySelector<HTMLFormElement>('#editor-form')!;
   const saveBtn = document.querySelector<HTMLButtonElement>('#editor-save')!;
   const toast = document.querySelector<HTMLElement>('#toast')!;
+  const loadError = document.querySelector<HTMLElement>('#load-error')!;
+  const loadErrorDetail = document.querySelector<HTMLElement>('#load-error-detail')!;
 
   let activeKey = 'clubs';
   let rows: Row[] = [];
   let clubOptions: ClubOption[] = [];
+  let clubOptionsLoaded = false;
   let editingId: string | null = null;
   let slugTouched = false;
 
@@ -217,23 +224,46 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     return false;
   };
 
-  async function loadAll() {
+  async function loadAll(retried = false): Promise<void> {
     loading.hidden = false;
     empty.hidden = true;
+    loadError.hidden = true;
     list.replaceChildren();
     try {
+      // La liste des clubs n'est rechargée qu'une fois (sélecteurs des formulaires).
+      const clubsPromise = clubOptionsLoaded
+        ? Promise.resolve<Row[]>([])
+        : (pb.collection(RMG_CLUBS_COLLECTION).getFullList({ sort: 'name' }) as unknown as Promise<Row[]>);
       const [data, clubs] = await Promise.all([
         pb.collection(active().collection).getFullList({ sort: active().sort }),
-        pb.collection(RMG_CLUBS_COLLECTION).getFullList({ sort: 'name' }),
+        clubsPromise,
       ]);
       rows = (data as unknown as Row[]);
-      clubOptions = (clubs as unknown as Row[]).map((c) => ({ id: String(c.id), name: String(c.name ?? '') }));
+      if (!clubOptionsLoaded) {
+        clubOptions = (clubs as unknown as Row[]).map((c) => ({ id: String(c.id), name: String(c.name ?? '') }));
+        clubOptionsLoaded = true;
+      }
       if (active().orderRows) rows = active().orderRows!(rows);
       const count = document.querySelector<HTMLElement>(`#count-${activeKey}`);
       if (count) count.textContent = String(rows.length);
       render();
     } catch (err) {
-      if (!handleAuthError(err)) notify('Chargement impossible. Vérifiez la connexion.');
+      if (handleAuthError(err)) return;
+      // Réseau capricieux ou limite de requêtes : une seule re-tentative.
+      const status = (err as { status?: number })?.status ?? 0;
+      if (!retried && (status === 0 || status === 429)) {
+        await new Promise((resolve) => window.setTimeout(resolve, status === 429 ? 2500 : 900));
+        return loadAll(true);
+      }
+      empty.hidden = true;
+      loadErrorDetail.textContent =
+        status === 429
+          ? 'Trop de requêtes rapprochées — attendez quelques secondes puis réessayez.'
+          : status === 404
+            ? 'Collection introuvable — vérifiez que le setup de la base a bien été exécuté.'
+            : status
+              ? `La base a répondu une erreur ${status}.`
+              : 'Vérifiez votre connexion internet, puis réessayez.';
     } finally {
       loading.hidden = true;
     }
@@ -363,6 +393,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         notify(`${res.singular} créé.`);
       }
       closeEditor();
+      clubOptionsLoaded = false; // la liste des clubs a peut-être changé
       await loadAll();
     } catch (err: any) {
       if (!handleAuthError(err)) {
@@ -382,6 +413,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     try {
       await pb.collection(res.collection).delete(row.id);
       notify('Élément supprimé.');
+      clubOptionsLoaded = false;
       await loadAll();
     } catch (err) {
       if (!handleAuthError(err)) notify('Suppression impossible.');
@@ -398,6 +430,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
   document.querySelector('#editor-close')!.addEventListener('click', closeEditor);
   document.querySelector('#editor-cancel')!.addEventListener('click', closeEditor);
+  document.querySelector('#load-retry')!.addEventListener('click', () => loadAll());
   document.querySelector('#logout')!.addEventListener('click', adminLogout);
   createBtn.addEventListener('click', () => openEditor());
 
@@ -434,6 +467,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   #create-btn{flex:0 0 auto;min-height:3rem;padding:.7rem 1.1rem;border:0;background:var(--cranberry);color:var(--paper);font:inherit;font-weight:800;cursor:pointer;white-space:nowrap}
   #create-btn:hover{background:var(--blue)}
   .loading,.empty{margin:0;padding:2rem 0;text-align:center;color:var(--muted);font-weight:700}
+  .load-error{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;margin:0 0 1.25rem;padding:1rem 1.25rem;background:#fde7ef;border-left:.3rem solid var(--cranberry)}
+  .load-error p{margin:0;color:#8c0d44;font-size:.88rem;line-height:1.5}
+  .load-error button{flex:0 0 auto;min-height:2.75rem;padding:.5rem 1.1rem;border:0;background:var(--cranberry);color:var(--paper);font:inherit;font-size:.82rem;font-weight:800;cursor:pointer}
+  .load-error button:hover{background:var(--blue)}
   .records{margin:0;padding:0;list-style:none;border-top:2px solid var(--blue)}
   .record{display:grid;grid-template-columns:auto 1fr auto auto;gap:1rem;align-items:center;padding:1rem 0;border-bottom:1px solid var(--line)}
   .dot{width:.7rem;height:.7rem;border-radius:50%;background:var(--muted)}
