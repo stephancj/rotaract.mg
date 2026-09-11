@@ -7,19 +7,24 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
 <BaseLayout title="Connexion — Administration Rotaract Madagascar" description="Portail d’administration du site Rotaract Madagascar. Accès réservé.">
   <meta name="robots" content="noindex,nofollow" slot="head" />
   <main class="login-page">
-    <div class="login-card">
-      <a class="back" href="/">← Retour au site</a>
-      <img src={logo} alt="Rotaract Madagasikara" />
-      <p class="eyebrow">PORTAIL ADMIN · ROTARACT.MG</p>
-      <h1>Connexion</h1>
-      <p class="hint">Connectez-vous avec le compte partagé des clubs pour gérer les clubs, leurs actions et leurs événements.</p>
-      <form id="login-form" novalidate>
+    <div class="login-hero">
+      <a class="back" href="/">← Rotaract Madagascar</a>
+      <p class="eyebrow">PORTAIL ADMIN · DISTRICT 9220</p>
+      <h1>Gérer le <strong>contenu</strong> du site.</h1>
+      <p class="lead">Clubs, actions et événements — publiés par les clubs, visibles après déploiement.</p>
+      <p class="motto"><span>Devise</span><strong>La camaraderie par le service.</strong></p>
+    </div>
+    <div class="login-side">
+      <form id="login-form" class="login-card" novalidate>
+        <img src={logo} alt="Rotaract Madagasikara" />
+        <h2>Connexion</h2>
+        <p class="hint">Connectez-vous avec le compte partagé des clubs.</p>
         <label><span>Adresse e-mail</span><input type="email" name="email" autocomplete="username" required /></label>
         <label><span>Mot de passe</span><input type="password" name="password" autocomplete="current-password" required /></label>
         <p class="form-error" id="login-error" role="alert" hidden></p>
         <button type="submit" id="login-submit">Se connecter <span aria-hidden="true">→</span></button>
+        <p class="login-foot">Rotaract Madagasikara · District 9220</p>
       </form>
-      <p class="login-foot">Rotaract Madagasikara · District 9220</p>
     </div>
   </main>
 </BaseLayout>
@@ -69,22 +74,37 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
 </script>
 
 <style>
-  :global(:root){--cranberry:#d41367;--blue:#17458f;--gold:#f7a81b;--paper:#ffffff;--ink:#54565a;--muted:#657f99;--line:#d0cfcd}
-  :global(*){box-sizing:border-box}:global(body){margin:0;background:#eef2f6;color:var(--ink);font-family:'Open Sans',Arial,sans-serif}
+  :global(:root){--cranberry:#d41367;--blue:#17458f;--blue-dark:#17458f;--gold:#f7a81b;--paper:#ffffff;--white:#ffffff;--ink:#54565a;--muted:#657f99;--line:#d0cfcd}
+  :global(*){box-sizing:border-box}:global(body){margin:0;background:var(--paper);color:var(--ink);font-family:'Open Sans',Arial,sans-serif}
+  :global(a),:global(button),:global(input){font:inherit}
   :global(a:focus-visible),:global(button:focus-visible),:global(input:focus-visible){outline:3px solid var(--gold);outline-offset:3px}
-  .login-page{display:grid;place-items:center;min-height:100vh;padding:2rem 1.25rem}
-  .login-card{width:min(26rem,100%);background:var(--paper);border-top:.4rem solid var(--cranberry);padding:2.5rem 2.25rem;box-shadow:0 1.5rem 4rem rgb(23 69 143/.12)}
-  .back{display:inline-block;margin-bottom:1.5rem;color:var(--blue);font-size:.85rem;font-weight:700;text-decoration:none}
+  .login-page{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);min-height:100vh}
+  .login-hero{display:flex;flex-direction:column;justify-content:center;padding:clamp(3rem,7vw,6rem) clamp(2rem,7vw,7rem);background:var(--cranberry);color:var(--white);border-top:.38rem solid var(--cranberry)}
+  .back{align-self:flex-start;margin-bottom:2.5rem;color:var(--white);font-size:.85rem;font-weight:700;text-decoration:none}
+  .back:hover{color:var(--gold)}
+  .eyebrow{margin:0 0 1.4rem;color:var(--gold);font-size:.72rem;font-weight:800;letter-spacing:.14em}
+  .login-hero h1{margin:0;max-width:12ch;font:700 clamp(2.8rem,4.5vw,4.6rem)/.95 'Open Sans',Arial,sans-serif;letter-spacing:-.055em}
+  .login-hero h1 strong{color:var(--white);font-weight:700;text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:.075em;text-underline-offset:.1em}
+  .lead{max-width:28rem;margin:1.5rem 0 0;font-size:1.05rem;line-height:1.6;color:var(--white)}
+  .motto{display:flex;align-items:baseline;gap:.8rem;max-width:28rem;margin:2rem 0 0;padding-top:1rem;border-top:1px solid rgb(255 255 255/.38)}
+  .motto span{color:var(--gold);font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+  .motto strong{font-size:1rem}
+  .login-side{display:grid;place-items:center;padding:clamp(2rem,5vw,4rem) clamp(1.25rem,4vw,3rem)}
+  .login-card{width:min(26rem,100%);background:var(--paper);border-top:.38rem solid var(--cranberry);padding:2.5rem 2.25rem;box-shadow:0 1.5rem 4rem rgb(23 69 143/.12)}
   .login-card img{display:block;width:11rem;max-width:100%;height:auto}
-  .eyebrow{margin:1.5rem 0 .5rem;color:var(--cranberry);font-size:.7rem;font-weight:800;letter-spacing:.12em}
-  h1{margin:0 0 .5rem;color:var(--blue);font-size:2rem;letter-spacing:-.03em}
+  .login-card h2{margin:1.5rem 0 .4rem;color:var(--blue-dark);font-size:1.8rem;letter-spacing:-.03em}
   .hint{margin:0 0 1.75rem;font-size:.9rem;line-height:1.55;color:var(--muted)}
-  form{display:grid;gap:1.1rem}
-  label{display:grid;gap:.4rem;font-size:.8rem;font-weight:800;color:var(--blue)}
-  input{min-height:3rem;padding:.7rem .9rem;border:1px solid var(--line);font:inherit;font-weight:400;color:var(--ink);background:var(--paper)}
-  .form-error{margin:0;padding:.8rem 1rem;background:#fde7ef;color:#a30e4e;font-size:.85rem;font-weight:700}
-  button{min-height:3.25rem;border:0;background:var(--cranberry);color:var(--paper);font:inherit;font-weight:800;cursor:pointer}
-  button:hover{background:var(--blue)}
-  button:disabled{opacity:.6;cursor:wait}
-  .login-foot{margin:1.75rem 0 0;border-top:1px solid var(--line);padding-top:1rem;color:var(--muted);font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  #login-form{display:grid;gap:1.1rem}
+  label{display:grid;gap:.4rem;font-size:.8rem;font-weight:800;color:var(--blue-dark)}
+  input{min-height:3rem;padding:.7rem .9rem;border:1px solid var(--line);font-weight:400;color:var(--ink);background:var(--paper)}
+  .form-error{margin:0;padding:.8rem 1rem;background:var(--white);border:1px solid var(--line);border-left:.3rem solid var(--cranberry);color:var(--cranberry);font-size:.85rem;font-weight:700}
+  button{min-height:3rem;display:inline-flex;align-items:center;justify-content:center;gap:1rem;border:0;background:var(--cranberry);color:var(--white);font-weight:800;cursor:pointer;transition:transform 180ms cubic-bezier(.22,1,.36,1),background 180ms ease}
+  button:hover{background:var(--blue);transform:translateY(-2px)}
+  button:disabled{opacity:.6;cursor:wait;transform:none}
+  .login-foot{margin:1.75rem 0 0;border-top:1px solid var(--line);padding-top:1rem;color:var(--muted);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  @media(max-width:860px){
+    .login-page{grid-template-columns:1fr;min-height:auto}
+    .login-hero{padding:3.5rem 1.35rem 2.5rem}
+    .login-hero h1{font-size:clamp(2.6rem,11vw,3.4rem)}
+  }
 </style>
