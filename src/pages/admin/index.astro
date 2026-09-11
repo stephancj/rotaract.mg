@@ -1,21 +1,26 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png';
 ---
 
 <BaseLayout title="Administration — Rotaract Madagascar" description="Portail d’administration du site Rotaract Madagascar. Accès réservé.">
   <meta name="robots" content="noindex,nofollow" slot="head" />
   <a class="skip-link" href="#admin-list">Aller à la liste</a>
 
-  <header class="admin-header">
-    <div>
-      <p class="eyebrow">ROTARACT.MG · PORTAIL ADMIN</p>
-      <h1>Gérer le contenu du site</h1>
-    </div>
+  <header class="admin-topbar">
+    <a class="brand" href="/" aria-label="Rotaract Madagascar, retour au site"><img src={logo} alt="Rotaract Madagasikara" /></a>
+    <span class="admin-tag">Portail admin</span>
     <div class="session">
       <span id="session-email" title="Compte connecté">…</span>
       <button type="button" id="logout">Se déconnecter</button>
     </div>
   </header>
+
+  <div class="admin-title">
+    <p class="eyebrow">ROTARACT MADAGASIKARA · DISTRICT 9220</p>
+    <h1>Gérer le contenu du site</h1>
+  </div>
 
   <p class="deploy-note"><strong>Publication :</strong> le site est généré à chaque déploiement. Vos modifications seront visibles en ligne après le prochain déploiement (rebuild).</p>
 
@@ -52,6 +57,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <footer class="admin-footer">
+    <p><strong>Rotaract Madagasikara</strong> · District 9220 — La camaraderie par le service.</p>
+    <a href="/">Voir le site <span aria-hidden="true">→</span></a>
+  </footer>
 </BaseLayout>
 
 <script>
@@ -452,10 +462,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   :global(a:focus-visible),:global(button:focus-visible),:global(input:focus-visible),:global(textarea:focus-visible),:global(select:focus-visible){outline:3px solid var(--gold);outline-offset:2px}
   .skip-link{position:fixed;top:-5rem;left:1rem;z-index:10;background:var(--paper);color:var(--blue);padding:.8rem 1rem;font-weight:800}
   .skip-link:focus{top:1rem}
-  .admin-header{display:flex;justify-content:space-between;align-items:end;gap:1.5rem;padding:2rem clamp(1.25rem,5vw,4rem) 1rem}
+  .admin-topbar{display:flex;align-items:center;gap:1rem;min-height:5.5rem;padding:.85rem clamp(1.25rem,5vw,4rem);background:var(--paper);border-top:.38rem solid var(--cranberry);border-bottom:1px solid var(--line)}
+  .brand img{display:block;height:3.25rem;width:auto}
+  .admin-tag{padding:.35rem .7rem;background:var(--blue);color:var(--paper);font-size:.68rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+  .admin-title{padding:2rem clamp(1.25rem,5vw,4rem) 0}
   .eyebrow{margin:0 0 .4rem;color:var(--cranberry);font-size:.7rem;font-weight:800;letter-spacing:.12em}
   h1{margin:0;color:var(--blue);font-size:clamp(1.6rem,3.5vw,2.4rem);letter-spacing:-.03em}
-  .session{display:flex;align-items:center;gap:.8rem;font-size:.82rem}
+  .session{display:flex;align-items:center;gap:.8rem;margin-left:auto;font-size:.82rem}
   .session span{max-width:16rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-weight:700}
   .session button{border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:.55rem .9rem;font:inherit;font-size:.8rem;font-weight:800;cursor:pointer}
   .session button:hover{border-color:var(--cranberry);color:var(--cranberry)}
@@ -507,5 +520,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   #editor-form footer button:hover{background:var(--blue)}
   #editor-form footer .secondary{background:transparent;color:var(--ink);border:1px solid var(--line)}
   .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:50;background:var(--blue);color:var(--paper);padding:.9rem 1.4rem;font-weight:800;font-size:.88rem;box-shadow:0 1rem 2.5rem rgb(0 0 0/.25)}
-  @media(max-width:640px){.admin-header{flex-direction:column;align-items:start}.toolbar{flex-direction:column;align-items:stretch}.record{grid-template-columns:auto 1fr;grid-auto-rows:auto}.record-actions{grid-column:2}.fields{grid-template-columns:1fr}}
+  .admin-footer{display:flex;justify-content:space-between;align-items:center;gap:1.5rem;margin:0 clamp(1.25rem,5vw,4rem) 3rem;padding:1.5rem clamp(1rem,3vw,2rem);background:var(--blue);color:var(--paper)}
+  .admin-footer p{margin:0;font-size:.82rem;color:var(--paper)}
+  .admin-footer strong{color:var(--gold)}
+  .admin-footer a{color:var(--gold);font-size:.82rem;font-weight:800;text-decoration:none;white-space:nowrap}
+  .admin-footer a:hover{color:var(--paper)}
+  @media(max-width:640px){.admin-topbar{flex-wrap:wrap;row-gap:.75rem}.admin-title{padding-top:1.5rem}.toolbar{flex-direction:column;align-items:stretch}.record{grid-template-columns:auto 1fr;grid-auto-rows:auto}.record-actions{grid-column:2}.fields{grid-template-columns:1fr}.admin-footer{flex-direction:column;align-items:start}}
 </style>
