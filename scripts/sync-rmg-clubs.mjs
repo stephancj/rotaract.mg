@@ -1,8 +1,8 @@
 /**
  * Aligne `rmg_clubs` sur la liste statique `src/data/clubs.ts` (qui fait foi).
  * - slug manquant → créé (actif, ordre en fin de liste)
- * - slug présent → champs mis à jour si différents (`active` et `sort_order`
- *   existants sont préservés : la visibilité se gère dans `/admin/`)
+ * - slug présent → champs mis à jour si différents (`active` existant
+ *   préservé : la visibilité se gère dans `/admin/`)
  * - signale les slugs en base absents du statique (orphelins, non supprimés)
  *
  * Lancer avec :
@@ -42,8 +42,7 @@ for (const club of staticClubs) {
   for (const [pbKey, tsKey] of FIELDS) payload[pbKey] = norm(club[tsKey]);
   const existing = bySlug.get(club.slug);
   if (!existing) {
-    const maxOrder = Math.max(0, ...(rows || []).map((r) => Number(r.sort_order) || 0));
-    await pb.collection('rmg_clubs').create({ slug: club.slug, ...payload, active: true, sort_order: maxOrder + 1 });
+    await pb.collection('rmg_clubs').create({ slug: club.slug, ...payload, active: true });
     console.log(`+ créé : ${club.slug}`);
     created += 1;
     continue;

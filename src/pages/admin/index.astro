@@ -116,7 +116,7 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
       singular: 'club',
       hint: 'Annuaire affiché dans « Trouvez votre club » et fiches /clubs/[slug]. Décochez « Visible » pour masquer sans supprimer.',
       titleField: 'name',
-      sort: 'sort_order,name',
+      sort: 'name',
       subtitle: (r) => [r.city, r.meeting, r.slug ? `/${r.slug}` : ''].filter(Boolean).join(' · '),
       fields: [
         { name: 'name', label: 'Nom du club', type: 'text', required: true },
@@ -134,7 +134,6 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
         { name: 'instagram', label: 'Instagram (URL)', type: 'url' },
         { name: 'description', label: 'Présentation', type: 'textarea', rows: 4 },
         { name: 'verified_at', label: 'Coordonnées vérifiées', type: 'text', hint: 'Ex : Janvier 2026' },
-        { name: 'sort_order', label: 'Ordre d’affichage', type: 'number' },
         { name: 'active', label: 'Visible sur le site', type: 'checkbox' },
       ],
     },
@@ -345,11 +344,9 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
     dialogTitle.textContent = row ? `Modifier ${res.singular}` : `Nouveau ${res.singular}`;
     dialogError.hidden = true;
     dialogFields.replaceChildren();
-    const maxOrder = rows.reduce((m, r) => Math.max(m, Number(r.sort_order) || 0), 0);
     res.fields.forEach((field) => {
       let value: unknown = row?.[field.name];
       if (!row && field.name === 'active') value = true;
-      if (!row && field.name === 'sort_order') value = maxOrder + 1;
       const wrap = document.createElement('div');
       wrap.innerHTML = fieldInput(field, value);
       wrap.querySelectorAll('input,textarea').forEach((el) => {

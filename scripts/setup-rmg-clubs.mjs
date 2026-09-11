@@ -37,21 +37,23 @@ const SCHEMA = [
   { name: 'president', type: 'text', required: false, options: { max: 180 } },
   { name: 'meeting_address', type: 'text', required: false, options: { max: 300 } },
   { name: 'verified_at', type: 'text', required: false, options: { max: 120 } },
-  { name: 'sort_order', type: 'number', required: false, options: { noDecimal: true } },
   { name: 'active', type: 'bool', required: false },
 ];
 
+// Tri A-Z uniquement : pas de colonne d'ordre manuel.
+const DROPPED = new Set(['sort_order']);
+
 const SEED = [
-  { slug: 'rotaract-ankoay', name: 'Rotaract Ankoay', city: 'Antananarivo', area: 'Tsimbazaza', meeting: 'Samedi · 14h00', email: 'rtcankoay.secretariat@gmail.com', website: 'https://rotaractankoay.wixsite.com/district9220', website_label: 'Site du club', verified_at: 'À confirmer', sort_order: 1, active: true },
-  { slug: 'rotaract-ankorondrano', name: 'Rotaract Ankorondrano', city: 'Antananarivo', area: 'Tamboho Waterfront', meeting: 'Dimanche · 15h00', email: 'rotaract.ankorondrano@gmail.com', verified_at: 'À confirmer', sort_order: 2, active: true },
-  { slug: 'rotaract-faneva', name: 'Rotaract Faneva', city: 'Antananarivo', area: 'Hôtel Restaurant Glacier', meeting: 'Samedi · 13h00', email: 'fanevarotaract@gmail.com', verified_at: 'À confirmer', sort_order: 3, active: true },
-  { slug: 'rotaract-amontana', name: 'Rotaract Amontana', city: 'Antananarivo', area: 'Ampasanisadoda', meeting: '2e et 4e vendredi · 18h30', email: 'contact@rotaractamontana.org', website: 'https://www.rotaractamontana.org/', website_label: 'Site du club', verified_at: 'À confirmer', sort_order: 4, active: true },
-  { slug: 'rotaract-athenee-antsirabe', name: 'Rotaract Athénée Antsirabe', city: 'Antsirabe', area: 'Hôtel Royal Palace', meeting: 'Samedi · 14h00', email: 'rotaract.athenee@gmail.com', website: 'https://rotaractathenee.wordpress.com/', website_label: 'Site du club', verified_at: 'À confirmer', sort_order: 5, active: true },
-  { slug: 'rotaract-hina', name: 'Rotaract Hina', city: 'Antananarivo', area: 'Ambondrona', meeting: 'Samedi · 13h30', website: 'https://rotaryclubtsimbaroa.org/rotaract-hina/', website_label: 'Actualités du club', verified_at: 'À confirmer', sort_order: 6, active: true },
-  { slug: 'rotaract-iarivo', name: 'Rotaract Iarivo', city: 'Antananarivo', area: 'Antananarivo', meeting: 'À confirmer', website: 'https://www.facebook.com/RTCIarivo', website_label: 'Page Facebook', verified_at: 'À confirmer', sort_order: 7, active: true },
-  { slug: 'rotaract-iloivato', name: 'Rotaract Iloivato', city: 'Antananarivo', area: 'Phô Lounge · Ampasamadinika', meeting: '2e et 4e samedi · 19h00', verified_at: 'À confirmer', sort_order: 8, active: true },
-  { slug: 'rotaract-mahajanga-bombacaceae', name: 'Rotaract Mahajanga-Bombacaceae', city: 'Mahajanga', area: 'Orlando Services · Majunga Be', meeting: 'Samedi · 18h30', verified_at: 'À confirmer', sort_order: 9, active: true },
-  { slug: 'rotaract-tsinjo', name: 'Rotaract Tsinjo', city: 'Antananarivo', area: 'Madagascar Underground · Antsahavola', meeting: 'Samedi · 13h00', email: 'rctsinjo@gmail.com', verified_at: 'À confirmer', sort_order: 10, active: true },
+  { slug: 'rotaract-ankoay', name: 'Rotaract Ankoay', city: 'Antananarivo', area: 'Tsimbazaza', meeting: 'Samedi · 14h00', email: 'rtcankoay.secretariat@gmail.com', website: 'https://rotaractankoay.wixsite.com/district9220', website_label: 'Site du club', verified_at: 'À confirmer', active: true },
+  { slug: 'rotaract-ankorondrano', name: 'Rotaract Ankorondrano', city: 'Antananarivo', area: 'Tamboho Waterfront', meeting: 'Dimanche · 15h00', email: 'rotaract.ankorondrano@gmail.com', verified_at: 'À confirmer', active: true },
+  { slug: 'rotaract-faneva', name: 'Rotaract Faneva', city: 'Antananarivo', area: 'Hôtel Restaurant Glacier', meeting: 'Samedi · 13h00', email: 'fanevarotaract@gmail.com', verified_at: 'À confirmer', active: true },
+  { slug: 'rotaract-amontana', name: 'Rotaract Amontana', city: 'Antananarivo', area: 'Ampasanisadoda', meeting: '2e et 4e vendredi · 18h30', email: 'contact@rotaractamontana.org', website: 'https://www.rotaractamontana.org/', website_label: 'Site du club', verified_at: 'À confirmer', active: true },
+  { slug: 'rotaract-athenee-antsirabe', name: 'Rotaract Athénée Antsirabe', city: 'Antsirabe', area: 'Hôtel Royal Palace', meeting: 'Samedi · 14h00', email: 'rotaract.athenee@gmail.com', website: 'https://rotaractathenee.wordpress.com/', website_label: 'Site du club', verified_at: 'À confirmer', active: true },
+  { slug: 'rotaract-hina', name: 'Rotaract Hina', city: 'Antananarivo', area: 'Ambondrona', meeting: 'Samedi · 13h30', website: 'https://rotaryclubtsimbaroa.org/rotaract-hina/', website_label: 'Actualités du club', verified_at: 'À confirmer', active: true },
+  { slug: 'rotaract-iarivo', name: 'Rotaract Iarivo', city: 'Antananarivo', area: 'Antananarivo', meeting: 'À confirmer', website: 'https://www.facebook.com/RTCIarivo', website_label: 'Page Facebook', verified_at: 'À confirmer', active: true },
+  { slug: 'rotaract-iloivato', name: 'Rotaract Iloivato', city: 'Antananarivo', area: 'Phô Lounge · Ampasamadinika', meeting: '2e et 4e samedi · 19h00', verified_at: 'À confirmer', active: true },
+  { slug: 'rotaract-mahajanga-bombacaceae', name: 'Rotaract Mahajanga-Bombacaceae', city: 'Mahajanga', area: 'Orlando Services · Majunga Be', meeting: 'Samedi · 18h30', verified_at: 'À confirmer', active: true },
+  { slug: 'rotaract-tsinjo', name: 'Rotaract Tsinjo', city: 'Antananarivo', area: 'Madagascar Underground · Antsahavola', meeting: 'Samedi · 13h00', email: 'rctsinjo@gmail.com', verified_at: 'À confirmer', active: true },
 ];
 
 const PUBLIC_ACTIVE_RULE = RMG_PUBLIC_OR_EDITOR_RULE;
@@ -75,14 +77,16 @@ if (!collection) {
   console.log('✓ collection `rmg_clubs` créée (lecture publique active=true, écriture compte clubs)');
 } else {
   const schema = Array.isArray(collection.schema) ? [...collection.schema] : [];
-  const additions = SCHEMA.filter((field) => !schema.some((current) => current.name === field.name));
+  const kept = schema.filter((f) => !DROPPED.has(f.name));
+  const removed = schema.length - kept.length;
+  const additions = SCHEMA.filter((field) => !kept.some((current) => current.name === field.name));
   const patch = {};
-  if (additions.length) patch.schema = [...schema, ...additions];
+  if (removed || additions.length) patch.schema = [...kept, ...additions];
   // Harmonise les règles même si la collection existait déjà (sans écraser :
   // `applyContentRules` ne touche que ce qui diffère du standard).
   if (Object.keys(patch).length) {
     collection = await pb.collections.update(collection.id, patch);
-    console.log(`✓ collection \`rmg_clubs\` mise à jour (${additions.map((f) => f.name).join(', ')})`);
+    console.log(`✓ collection \`rmg_clubs\` mise à jour (retirés: ${removed}, ajoutés: ${additions.map((f) => f.name).join(', ') || '—'})`);
   }
   if (await applyContentRules(pb, 'rmg_clubs')) {
     console.log('✓ règles `rmg_clubs` alignées (écriture compte clubs)');

@@ -35,8 +35,12 @@ export type PbClubRecord = Record<string, unknown> & {
   active?: boolean;
   verifiedAt?: string;
   verified_at?: string;
-  sort_order?: number;
 };
+
+/** Tri alphabétique français (utilisé partout, y compris en repli local). */
+export function sortClubsAz<T extends { name: string }>(clubs: T[]): T[] {
+  return [...clubs].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+}
 
 /** Normalise un enregistrement PocketBase vers le type `Club` utilisé par les pages. */
 export function normalizePbClub(record: PbClubRecord): Club {
@@ -78,7 +82,7 @@ export async function getClubs(): Promise<Club[]> {
   try {
     const params = new URLSearchParams({
       perPage: '200',
-      sort: 'sort_order,name',
+      sort: 'name',
       // Seuls les clubs actifs sont exposés publiquement.
       filter: 'active = true',
     });
@@ -87,10 +91,10 @@ export async function getClubs(): Promise<Club[]> {
     );
     if (!res.ok) throw new Error(`PocketBase: ${res.status}`);
     const body = (await res.json()) as PbListResponse<PbClubRecord>;
-    if (!Array.isArray(body.items) || body.items.length === 0) return fallbackClubs;
-    return body.items.map(normalizePbClub);
+    if (!Array.isArray(body.items) || body.items.length === 0) return sortClubsAz(fallbackClubs);
+    return sortClubsAz(body.items.map(normalizePbClub));
   } catch {
-    return fallbackClubs;
+    return sortClubsAz(fallbackClubs);
   }
 }
 
