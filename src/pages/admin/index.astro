@@ -475,13 +475,13 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
   /* Même système visuel que la page d'accueil : couleurs officielles,
      titres resserrés, filets bleus, boutons carrés. Global (non scopé)
      car lignes et champs sont générés en JS. */
-  :global(:root){--cranberry:#d41367;--blue:#17458f;--blue-dark:#17458f;--gold:#f7a81b;--powder-blue:#b9d9eb;--ink:#54565a;--muted:#657f99;--line:#d0cfcd;--paper:#ffffff;--white:#ffffff}
-  :global(*){box-sizing:border-box}
-  :global(html){scroll-behavior:smooth}
-  :global(body){margin:0;background:var(--paper);color:var(--ink);font-family:'Open Sans',Arial,sans-serif}
-  :global(a),:global(button),:global(input),:global(select),:global(textarea){font:inherit}
+  :root{--cranberry:#d41367;--blue:#17458f;--blue-dark:#17458f;--gold:#f7a81b;--powder-blue:#b9d9eb;--ink:#54565a;--muted:#657f99;--line:#d0cfcd;--paper:#ffffff;--white:#ffffff}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Open Sans',Arial,sans-serif}
+  a,button,input,select,textarea{font:inherit}
   [hidden]{display:none!important}
-  :global(a:focus-visible),:global(button:focus-visible),:global(input:focus-visible),:global(textarea:focus-visible),:global(select:focus-visible){outline:3px solid var(--gold);outline-offset:3px}
+  a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
   .skip-link{position:fixed;top:-5rem;left:1rem;z-index:10;background:var(--paper);color:var(--blue-dark);padding:.8rem 1rem;font-weight:800}
   .skip-link:focus{top:1rem}
 
