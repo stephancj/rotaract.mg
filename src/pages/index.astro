@@ -198,7 +198,7 @@ const rotaractMadagasikaraLogo = 'https://rotaplast.rotary.mg/assets/rotaract-ma
                 <h4>{item.title}</h4>
                 {item.description && <p class="agenda-desc">{item.description}</p>}
                 <div class="agenda-links">
-                  {item.clubSlug && <a href={`/clubs/${item.clubSlug}/`}>Fiche du club →</a>}
+                  {item.clubNames.length === 1 && item.clubSlug && <a href={`/clubs/${item.clubSlug}/`}>Fiche du club →</a>}
                   {item.href && <a href={item.href} target={item.href.startsWith('http') ? '_blank' : undefined} rel={item.href.startsWith('http') ? 'noreferrer' : undefined}>Plus d’infos <span aria-hidden="true">↗</span></a>}
                 </div>
               </div>
@@ -218,7 +218,7 @@ const rotaractMadagasikaraLogo = 'https://rotaplast.rotary.mg/assets/rotaract-ma
                 <h4>{item.title}</h4>
                 {item.description && <p class="agenda-desc">{item.description}</p>}
                 <div class="agenda-links">
-                  {item.clubSlug && <a href={`/clubs/${item.clubSlug}/`}>Fiche du club →</a>}
+                  {item.clubNames.length === 1 && item.clubSlug && <a href={`/clubs/${item.clubSlug}/`}>Fiche du club →</a>}
                   {item.href && <a href={item.href} target={item.href.startsWith('http') ? '_blank' : undefined} rel={item.href.startsWith('http') ? 'noreferrer' : undefined}>Plus d’infos <span aria-hidden="true">↗</span></a>}
                 </div>
               </div>

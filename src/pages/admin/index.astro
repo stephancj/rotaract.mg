@@ -72,7 +72,7 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
     RMG_EVENTS_COLLECTION,
   } from '../../lib/pocketbase';
 
-  type FieldType = 'text' | 'textarea' | 'email' | 'url' | 'number' | 'date' | 'club' | 'checkbox';
+  type FieldType = 'text' | 'textarea' | 'email' | 'url' | 'number' | 'date' | 'club' | 'clubs' | 'checkbox';
   type Field = { name: string; label: string; type: FieldType; required?: boolean; hint?: string; rows?: number };
   type Row = Record<string, any>;
   type ClubOption = { id: string; name: string };
@@ -150,7 +150,7 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
       orderRows: (list) => [...list].sort(byDateDescTitle),
       fields: [
         { name: 'title', label: 'Titre', type: 'text', required: true },
-        { name: 'club', label: 'Club organisateur', type: 'club', hint: 'Vide = interclubs / action commune.' },
+        { name: 'club', label: 'Clubs organisateurs', type: 'clubs', hint: 'Plusieurs clubs possibles. Aucun = interclubs, ouvert à tous.' },
         { name: 'date', label: 'Date de l’action', type: 'date' },
         { name: 'lieu', label: 'Lieu', type: 'text' },
         { name: 'category', label: 'Catégorie', type: 'text', hint: 'Ex : Santé · Programme interclubs' },
@@ -174,7 +174,7 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
       orderRows: (list) => [...list].sort(byDateDescTitle),
       fields: [
         { name: 'title', label: 'Titre', type: 'text', required: true },
-        { name: 'club', label: 'Club organisateur', type: 'club', hint: 'Vide = interclubs / événement commun.' },
+        { name: 'club', label: 'Clubs organisateurs', type: 'clubs', hint: 'Plusieurs clubs possibles. Aucun = interclubs, ouvert à tous.' },
         { name: 'date', label: 'Date de l’événement', type: 'date' },
         { name: 'lieu', label: 'Lieu', type: 'text' },
         { name: 'cadence', label: 'Rythme', type: 'text', hint: 'Ex : Chaque année (optionnel si date précise)' },
@@ -211,8 +211,16 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
   let slugTouched = false;
 
   const active = () => RESOURCES.find((r) => r.key === activeKey)!;
+  const clubIdsOf = (row: Row): string[] => {
+    const v = row.club;
+    if (Array.isArray(v)) return v.map(String);
+    return v ? [String(v)] : [];
+  };
   const clubNameOf = (row: Row) =>
-    clubOptions.find((c) => c.id === row.club)?.name ?? '';
+    clubIdsOf(row)
+      .map((id) => clubOptions.find((c) => c.id === id)?.name ?? '')
+      .filter(Boolean)
+      .join(' · ');
   const esc = (v: unknown) =>
     String(v ?? '')
       .replaceAll('&', '&amp;')
@@ -320,6 +328,12 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
     if (field.type === 'date') {
       return `<label><span>${esc(field.label)}${field.required ? ' *' : ''}</span><input type="date" name="${field.name}" value="${esc(String(value ?? '').slice(0, 10))}"${req} />${hintHtml}</label>`;
     }
+    if (field.type === 'clubs') {
+      const selected = new Set(clubIdsOf({ club: value }));
+      const boxes = clubOptions.map((c) =>
+        `<label class="mini-check"><input type="checkbox" name="${field.name}" value="${esc(c.id)}"${selected.has(c.id) ? ' checked' : ''} /><span>${esc(c.name)}</span></label>`).join('');
+      return `<fieldset class="clubs-field"><legend>${esc(field.label)}${field.required ? ' *' : ''}</legend><div class="clubs-grid">${boxes || '<small>Aucun club en base pour le moment.</small>'}</div>${hintHtml}</fieldset>`;
+    }
     const inputType = field.type === 'number' ? 'number' : field.type === 'email' ? 'email' : field.type === 'url' ? 'url' : 'text';
     return `<label><span>${esc(field.label)}${field.required ? ' *' : ''}</span><input type="${inputType}" name="${field.name}" value="${v}"${req} />${hintHtml}</label>`;
   }
@@ -370,6 +384,10 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
     const payload: Record<string, any> = {};
     let valid = true;
     res.fields.forEach((field) => {
+      if (field.type === 'clubs') {
+        payload[field.name] = [...dialogForm.querySelectorAll<HTMLInputElement>(`input[name="${field.name}"]:checked`)].map((el) => el.value);
+        return;
+      }
       const control = dialogForm.elements.namedItem(field.name) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
       if (!control) return;
       if (field.type === 'checkbox') {
@@ -527,6 +545,11 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
   .fields label{display:grid;gap:.35rem;font-size:.78rem;font-weight:800;color:var(--blue-dark)}
   .fields label.wide{grid-column:1/-1}
   .fields label.check{grid-column:1/-1;display:flex;align-items:center;gap:.7rem;font-size:.9rem;cursor:pointer}
+  .clubs-field{grid-column:1/-1;margin:0;padding:0;border:0}
+  .clubs-field legend{padding:0;font-size:.78rem;font-weight:800;color:var(--blue-dark)}
+  .clubs-grid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem .8rem;max-height:12rem;overflow:auto;margin-top:.5rem;padding:.8rem;border:1px solid var(--line)}
+  .mini-check{display:flex;align-items:center;gap:.6rem;font-size:.85rem;font-weight:600;color:var(--ink);cursor:pointer}
+  .mini-check input{width:1.1rem;height:1.1rem;accent-color:var(--cranberry)}
   .fields input[type="text"],.fields input[type="email"],.fields input[type="url"],.fields input[type="number"],.fields input[type="date"],.fields select,.fields textarea{width:100%;padding:.65rem .8rem;border:1px solid var(--line);font-weight:400;color:var(--ink);background:var(--paper)}
   .fields input[type="checkbox"]{width:1.25rem;height:1.25rem;accent-color:var(--cranberry)}
   .fields small{font-weight:400;color:var(--muted)}

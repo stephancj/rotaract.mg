@@ -18,13 +18,9 @@ const URL = RMG_URL;
 const EMAIL = process.env.PB_ADMIN_EMAIL;
 const PASSWORD = process.env.PB_ADMIN_PASSWORD;
 const ACCOUNT_EMAIL = process.env.RMG_ACCOUNT_EMAIL || 'admin@rotaract.mg';
-const ACCOUNT_PASSWORD = process.env.RMG_ACCOUNT_PASSWORD;
+const ACCOUNT_PASSWORD = process.env.RMG_ACCOUNT_PASSWORD; // optionnel si le compte existe déjà
 if (!EMAIL || !PASSWORD) {
   console.error('PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD requis');
-  process.exit(1);
-}
-if (!ACCOUNT_PASSWORD) {
-  console.error('RMG_ACCOUNT_PASSWORD requis (mot de passe du compte partagé)');
   process.exit(1);
 }
 
@@ -69,6 +65,10 @@ if (!users) {
 
 // 2. Compte partagé (créé ou remis à l'état souhaité).
 const existing = await pb.collection('rmg_users').getFirstListItem(`email = "${ACCOUNT_EMAIL}"`).catch(() => null);
+if (!existing && !ACCOUNT_PASSWORD) {
+  console.error(`RMG_ACCOUNT_PASSWORD requis pour créer ${ACCOUNT_EMAIL}`);
+  process.exit(1);
+}
 if (!existing) {
   await pb.collection('rmg_users').create({
     email: ACCOUNT_EMAIL,
@@ -81,14 +81,17 @@ if (!existing) {
   });
   console.log(`✓ compte ${ACCOUNT_EMAIL} créé`);
 } else {
-  await pb.collection('rmg_users').update(existing.id, {
-    password: ACCOUNT_PASSWORD,
-    passwordConfirm: ACCOUNT_PASSWORD,
+  const patch = {
     name: existing.name || 'Coordination Rotaract Madagascar',
     rmg_access: true,
     verified: true,
-  });
-  console.log(`✓ compte ${ACCOUNT_EMAIL} mis à jour (mot de passe + accès)`);
+  };
+  if (ACCOUNT_PASSWORD) {
+    patch.password = ACCOUNT_PASSWORD;
+    patch.passwordConfirm = ACCOUNT_PASSWORD;
+  }
+  await pb.collection('rmg_users').update(existing.id, patch);
+  console.log(`✓ compte ${ACCOUNT_EMAIL} mis à jour (${ACCOUNT_PASSWORD ? 'mot de passe + accès' : 'accès (mot de passe inchangé)'})`);
 }
 
 // 3. Règles des contenus.
@@ -97,8 +100,11 @@ for (const name of ['rmg_clubs', 'rmg_actions', 'rmg_events']) {
   else console.log(`· règles \`${name}\` déjà à jour`);
 }
 
-// 4. Auto-test d'accès.
+// 4. Auto-test d'accès (uniquement si le mot de passe est fourni).
 const failures = [];
+if (!ACCOUNT_PASSWORD) {
+  console.log('· auto-test ignoré (RMG_ACCOUNT_PASSWORD absent)');
+} else {
 const ok = (label, cond) => {
   console.log(`${cond ? '✓' : '✗'} test: ${label}`);
   if (!cond) failures.push(label);
@@ -163,3 +169,4 @@ if (failures.length) {
   process.exit(1);
 }
 console.log('Terminé : compte opérationnel.');
+} // fin auto-test (si RMG_ACCOUNT_PASSWORD fourni)

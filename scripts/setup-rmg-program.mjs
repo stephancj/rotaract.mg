@@ -39,7 +39,9 @@ const CLUB_FIELD = {
   name: 'club',
   type: 'relation',
   required: false,
-  options: { collectionId: CLUBS_ID, cascadeDelete: false, maxSelect: 1, displayFields: ['name'] },
+  // Multi-sélection : une action/un événement peut réunir plusieurs clubs.
+  // Vide = interclubs, ouvert à tous.
+  options: { collectionId: CLUBS_ID, cascadeDelete: false, maxSelect: 20, displayFields: ['name'] },
 };
 const DATE_FIELD = { name: 'date', type: 'date', required: false, options: { min: '', max: '' } };
 const LIEU_FIELD = { name: 'lieu', type: 'text', required: false, options: { max: 220 } };
@@ -91,12 +93,16 @@ async function ensureCollection(name, wanted) {
   const kept = schema.filter((f) => !DROPPED.has(f.name));
   const removed = schema.length - kept.length;
   const additions = wanted.filter((f) => !kept.some((c) => c.name === f.name));
-  // Maintient le pointeur de relation vers rmg_clubs même si l'id a changé.
+  // Maintient le pointeur de relation vers rmg_clubs même si l'id a changé,
+  // et garantit la multi-sélection (maxSelect) + le bon displayFields.
   const rel = kept.find((f) => f.name === 'club');
   let relFixed = false;
-  if (rel && rel.options?.collectionId !== CLUBS_ID) {
-    rel.options = { ...(rel.options || {}), collectionId: CLUBS_ID };
-    relFixed = true;
+  if (rel) {
+    const want = { ...(rel.options || {}), collectionId: CLUBS_ID, maxSelect: 20, displayFields: ['name'] };
+    if (JSON.stringify(rel.options) !== JSON.stringify(want)) {
+      rel.options = want;
+      relFixed = true;
+    }
   }
   const patch = {};
   if (removed || additions.length || relFixed) patch.schema = [...kept, ...additions];
@@ -124,7 +130,8 @@ async function cleanupLegacySeeds(name) {
   const rows = await pb.collection(name).getFullList({ perPage: 200 }).catch(() => []);
   let deleted = 0;
   for (const row of rows || []) {
-    if (LEGACY_TITLES.has(row.title) && !row.club && !row.date) {
+    const linked = Array.isArray(row.club) ? row.club.length > 0 : Boolean(row.club);
+    if (LEGACY_TITLES.has(row.title) && !linked && !row.date) {
       await pb.collection(name).delete(row.id);
       deleted += 1;
     }
@@ -132,8 +139,24 @@ async function cleanupLegacySeeds(name) {
   console.log(deleted ? `✓ ${deleted} ligne(s) du seed initial retirée(s) de \`${name}\`` : `· rien à nettoyer dans \`${name}\``);
 }
 
+// Normalise les anciens rattachements mono-club (chaîne) vers tableau,
+// suite au passage en multi-sélection.
+async function normalizeClubLinks(name) {
+  const rows = await pb.collection(name).getFullList({ perPage: 200 }).catch(() => []);
+  let fixed = 0;
+  for (const row of rows || []) {
+    if (typeof row.club === 'string' && row.club) {
+      await pb.collection(name).update(row.id, { club: [row.club] });
+      fixed += 1;
+    }
+  }
+  console.log(fixed ? `✓ ${fixed} rattachement(s) converti(s) en multi-clubs dans \`${name}\`` : `· rattachements \`${name}\` déjà au format multi`);
+}
+
 await ensureCollection('rmg_actions', ACTIONS_WANTED);
 await ensureCollection('rmg_events', EVENTS_WANTED);
 await cleanupLegacySeeds('rmg_actions');
 await cleanupLegacySeeds('rmg_events');
+await normalizeClubLinks('rmg_actions');
+await normalizeClubLinks('rmg_events');
 console.log('Terminé.');

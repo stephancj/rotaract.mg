@@ -125,6 +125,8 @@ export type ClubActivity = {
   imageAlt: string;
   /** Nom du club, ou '' pour une activité interclubs / commune. */
   clubName: string;
+  /** Tous les clubs concernés (vide = interclubs). */
+  clubNames: string[];
   clubSlug: string;
 };
 
@@ -137,23 +139,31 @@ type PbActivityRecord = Record<string, unknown> & {
   href?: string;
   image?: string;
   image_alt?: string;
-  expand?: { club?: { name?: string; slug?: string } };
+  expand?: { club?: { name?: string; slug?: string } | Array<{ name?: string; slug?: string }> };
 };
 
 function normalizeActivity(kind: ClubActivity['kind']) {
-  return (record: PbActivityRecord): ClubActivity => ({
-    id: String(record.id),
-    kind,
-    title: String(record.title ?? ''),
-    description: String(record.description ?? ''),
-    date: String(record.date ?? '').slice(0, 10),
-    lieu: String(record.lieu ?? ''),
-    href: String(record.href ?? ''),
-    image: String(record.image ?? ''),
-    imageAlt: String(record.image_alt ?? ''),
-    clubName: String(record.expand?.club?.name ?? ''),
-    clubSlug: String(record.expand?.club?.slug ?? ''),
-  });
+  return (record: PbActivityRecord): ClubActivity => {
+    const expanded = record.expand?.club;
+    const clubs = (Array.isArray(expanded) ? expanded : expanded ? [expanded] : [])
+      .map((c) => ({ name: String(c?.name ?? ''), slug: String(c?.slug ?? '') }))
+      .filter((c) => c.name);
+    const names = clubs.map((c) => c.name);
+    return {
+      id: String(record.id),
+      kind,
+      title: String(record.title ?? ''),
+      description: String(record.description ?? ''),
+      date: String(record.date ?? '').slice(0, 10),
+      lieu: String(record.lieu ?? ''),
+      href: String(record.href ?? ''),
+      image: String(record.image ?? ''),
+      imageAlt: String(record.image_alt ?? ''),
+      clubNames: names,
+      clubName: names.join(' · '),
+      clubSlug: clubs[0]?.slug ?? '',
+    };
+  };
 }
 
 async function getActivityRecords(
