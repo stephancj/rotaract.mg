@@ -13,7 +13,7 @@
  *   PB_URL="https://rtc-amontana.pockethost.io" PB_ADMIN_EMAIL="…" PB_ADMIN_PASSWORD="…" node scripts/setup-rmg-program.mjs
  */
 import PocketBase from 'pocketbase';
-import { RMG_URL, RMG_EDITOR_RULE, RMG_PUBLIC_OR_EDITOR_RULE, applyContentRules } from './rmg-common.mjs';
+import { RMG_URL, RMG_ACTIVITY_CREATE_RULE, RMG_ACTIVITY_UPDATE_DELETE_RULE, RMG_PUBLIC_OR_EDITOR_RULE, applyScopedRules } from './rmg-common.mjs';
 
 const URL = RMG_URL;
 const EMAIL = process.env.PB_ADMIN_EMAIL;
@@ -30,7 +30,8 @@ const clubs = await pb.collections.getOne('rmg_clubs');
 const CLUBS_ID = clubs.id;
 
 const PUBLIC_ACTIVE_RULE = RMG_PUBLIC_OR_EDITOR_RULE;
-const WRITE_RULE = RMG_EDITOR_RULE;
+const ACTIVITY_CREATE_RULE = RMG_ACTIVITY_CREATE_RULE;
+const ACTIVITY_WRITE_RULE = RMG_ACTIVITY_UPDATE_DELETE_RULE;
 
 // Champs retirés de l'ancien modèle « phares » (ordre/vedette gérés par date).
 const DROPPED = new Set(['featured', 'sort_order']);
@@ -79,12 +80,13 @@ async function ensureCollection(name, wanted) {
       name,
       type: 'base',
       schema: wanted,
-      // Lecture publique des éléments actifs ; écriture réservée au compte des clubs (`rmg_users`).
+      // Lecture publique des éléments actifs ; création si le club s'inclut
+      // (ou national), modification si mentionné (ou national).
       listRule: PUBLIC_ACTIVE_RULE,
       viewRule: PUBLIC_ACTIVE_RULE,
-      createRule: WRITE_RULE,
-      updateRule: WRITE_RULE,
-      deleteRule: WRITE_RULE,
+      createRule: ACTIVITY_CREATE_RULE,
+      updateRule: ACTIVITY_WRITE_RULE,
+      deleteRule: ACTIVITY_WRITE_RULE,
     });
     console.log(`✓ collection \`${name}\` créée (lecture publique active=true, écriture compte clubs)`);
     return;
@@ -110,9 +112,9 @@ async function ensureCollection(name, wanted) {
     await pb.collections.update(collection.id, patch);
     console.log(`✓ collection \`${name}\` mise à jour (retirés: ${removed}, ajoutés: ${additions.map((f) => f.name).join(', ') || '—'})`);
   }
-  // Aligne les règles sur le standard (sans écraser autre chose).
-  if (await applyContentRules(pb, name)) {
-    console.log(`✓ règles \`${name}\` alignées (écriture compte clubs)`);
+  // Aligne les règles sur le standard scopé par club (sans écraser autre chose).
+  if (await applyScopedRules(pb)) {
+    console.log(`✓ règles \`rmg_*\` alignées (national + admins par club)`);
   } else if (!Object.keys(patch).length) {
     console.log(`· collection \`${name}\` déjà à jour`);
   }

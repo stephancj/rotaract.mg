@@ -1,10 +1,12 @@
 /**
- * Compte partagé des clubs pour le portail `/admin/` de rotaract.mg.
+ * Compte national + règles scopées pour le portail `/admin/` de rotaract.mg.
  *
- * Crée la collection d'auth `rmg_users` + le compte partagé, puis aligne
- * les règles des collections `rmg_*` : lecture publique des éléments actifs,
- * lecture/écriture complète pour le compte des clubs (drapeau
- * `rmg_access = true`, étanche aux autres collections d'auth de la base).
+ * Crée la collection d'auth `rmg_users` + le compte national (sans club),
+ * puis aligne les règles des collections `rmg_*` : lecture publique des
+ * éléments actifs, écriture complète pour le national, écriture restreinte
+ * pour chaque admin de club (son club + ses actions/événements propres ou
+ * multi-clubs le mentionnant). Les comptes par club sont créés par
+ * `scripts/setup-rmg-club-admins.mjs` (un couple e-mail/mot de passe par club).
  *
  * Idempotent. Inclut un auto-test d'accès (CRUD + négatifs).
  * Lancer avec :
@@ -12,7 +14,7 @@
  *   (RMG_ACCOUNT_EMAIL optionnel, défaut : admin@rotaract.mg)
  */
 import PocketBase from 'pocketbase';
-import { RMG_URL, applyContentRules } from './rmg-common.mjs';
+import { RMG_URL, applyScopedRules } from './rmg-common.mjs';
 
 const URL = RMG_URL;
 const EMAIL = process.env.PB_ADMIN_EMAIL;
@@ -94,11 +96,10 @@ if (!existing) {
   console.log(`✓ compte ${ACCOUNT_EMAIL} mis à jour (${ACCOUNT_PASSWORD ? 'mot de passe + accès' : 'accès (mot de passe inchangé)'})`);
 }
 
-// 3. Règles des contenus.
-for (const name of ['rmg_clubs', 'rmg_actions', 'rmg_events']) {
-  if (await applyContentRules(pb, name)) console.log(`✓ règles \`${name}\` alignées (écriture compte clubs)`);
-  else console.log(`· règles \`${name}\` déjà à jour`);
-}
+// 3. Règles des contenus (scopées par club : national = sans club,
+//    admin club = son club + ses activités propres ou multi-clubs).
+if (await applyScopedRules(pb)) console.log('✓ règles `rmg_*` alignées (national + admins par club)');
+else console.log('· règles `rmg_*` déjà à jour');
 
 // 4. Auto-test d'accès (uniquement si le mot de passe est fourni).
 const failures = [];

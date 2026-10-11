@@ -18,13 +18,23 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
       <form id="login-form" class="login-card" novalidate>
         <img src={logo} alt="Rotaract Madagasikara" />
         <h2>Connexion</h2>
-        <p class="hint">Connectez-vous avec le compte partagé des clubs.</p>
+        <p class="hint">Connectez-vous avec le compte de votre club (ou le compte de coordination nationale).</p>
         <label><span>Adresse e-mail</span><input type="email" name="email" autocomplete="username" required /></label>
         <label><span>Mot de passe</span><input type="password" name="password" autocomplete="current-password" required /></label>
         <p class="form-error" id="login-error" role="alert" hidden></p>
         <button type="submit" id="login-submit">Se connecter <span aria-hidden="true">→</span></button>
         <p class="login-foot">Rotaract Madagasikara · District 9220</p>
       </form>
+      <div class="forgot">
+        <button type="button" id="forgot-toggle" class="link-btn">Mot de passe oublié ?</button>
+        <form id="forgot-form" novalidate hidden>
+          <p>Indiquez l'e-mail de votre compte : si un compte existe, un lien de réinitialisation vient de vous être envoyé (pensez à vérifier les indésirables).</p>
+          <label><span>Adresse e-mail du compte</span><input type="email" name="email" autocomplete="email" required /></label>
+          <p class="form-error" id="forgot-error" role="alert" hidden></p>
+          <p class="form-ok" id="forgot-ok" role="status" hidden></p>
+          <button type="submit" id="forgot-submit">Envoyer le lien <span aria-hidden="true">→</span></button>
+        </form>
+      </div>
     </div>
   </main>
 </BaseLayout>
@@ -71,6 +81,43 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
       submit.innerHTML = 'Se connecter <span aria-hidden="true">→</span>';
     }
   });
+
+  // Mot de passe oublié : envoie le lien de réinitialisation Brevo.
+  // Message volontairement générique (ne révèle pas si le compte existe).
+  const forgotToggle = document.querySelector<HTMLButtonElement>('#forgot-toggle')!;
+  const forgotForm = document.querySelector<HTMLFormElement>('#forgot-form')!;
+  const forgotError = document.querySelector<HTMLElement>('#forgot-error')!;
+  const forgotOk = document.querySelector<HTMLElement>('#forgot-ok')!;
+  const forgotSubmit = document.querySelector<HTMLButtonElement>('#forgot-submit')!;
+  forgotToggle.addEventListener('click', () => {
+    forgotForm.hidden = !forgotForm.hidden;
+    forgotToggle.textContent = forgotForm.hidden ? 'Mot de passe oublié ?' : 'Masquer';
+  });
+  forgotForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    forgotError.hidden = true;
+    forgotOk.hidden = true;
+    const email = String(new FormData(forgotForm).get('email') || '').trim();
+    if (!email) {
+      forgotError.textContent = 'Saisissez l’adresse e-mail de votre compte.';
+      forgotError.hidden = false;
+      return;
+    }
+    forgotSubmit.disabled = true;
+    forgotSubmit.textContent = 'Envoi en cours…';
+    try {
+      await pb.collection(RMG_USERS_COLLECTION).requestPasswordReset(email);
+      forgotOk.textContent = 'Si un compte existe pour cet e-mail, un lien de réinitialisation vient d’être envoyé.';
+      forgotOk.hidden = false;
+    } catch {
+      // Même message générique en cas d'échec (filet anti-énumération).
+      forgotOk.textContent = 'Si un compte existe pour cet e-mail, un lien de réinitialisation vient d’être envoyé.';
+      forgotOk.hidden = false;
+    } finally {
+      forgotSubmit.disabled = false;
+      forgotSubmit.innerHTML = 'Envoyer le lien <span aria-hidden="true">→</span>';
+    }
+  });
 </script>
 
 <style>
@@ -98,10 +145,16 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
   label{display:grid;gap:.4rem;font-size:.8rem;font-weight:800;color:var(--blue-dark)}
   input{min-height:3rem;padding:.7rem .9rem;border:1px solid var(--line);font-weight:400;color:var(--ink);background:var(--paper)}
   .form-error{margin:0;padding:.8rem 1rem;background:var(--white);border:1px solid var(--line);border-left:.3rem solid var(--cranberry);color:var(--cranberry);font-size:.85rem;font-weight:700}
+  .form-ok{margin:0;padding:.8rem 1rem;background:var(--white);border:1px solid var(--line);border-left:.3rem solid var(--blue);color:var(--blue-dark);font-size:.85rem;font-weight:700;line-height:1.6}
   button{min-height:3rem;display:inline-flex;align-items:center;justify-content:center;gap:1rem;border:0;background:var(--cranberry);color:var(--white);font-weight:800;cursor:pointer;transition:transform 180ms cubic-bezier(.22,1,.36,1),background 180ms ease}
   button:hover{background:var(--blue);transform:translateY(-2px)}
   button:disabled{opacity:.6;cursor:wait;transform:none}
   .login-foot{margin:1.75rem 0 0;border-top:1px solid var(--line);padding-top:1rem;color:var(--muted);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .forgot{margin-top:1.25rem;border-top:1px solid var(--line);padding-top:1.25rem}
+  .link-btn{border:0;background:none;padding:0;color:var(--cranberry);font-size:.88rem;font-weight:800;cursor:pointer}
+  .link-btn:hover{color:var(--blue);text-decoration:underline;text-underline-offset:.3rem}
+  #forgot-form{margin-top:1rem;display:grid;gap:1.1rem}
+  #forgot-form p{margin:0;font-size:.88rem;line-height:1.6;color:var(--muted)}
   @media(max-width:860px){
     .login-page{grid-template-columns:1fr;min-height:auto}
     .login-hero{padding:3.5rem 1.35rem 2.5rem}

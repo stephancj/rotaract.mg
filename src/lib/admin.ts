@@ -7,8 +7,8 @@ let instance: PocketBase | null = null;
 
 /**
  * Client PocketBase partagé pour le portail admin de rotaract.mg.
- * Authentification = compte partagé des clubs (`rmg_users`), persistée
- * localement (localStorage du navigateur).
+ * Authentification = compte du club (`rmg_users`, un par club + un national),
+ * persistée localement (localStorage du navigateur).
  * Utilisé uniquement côté client (scripts des pages `/admin/*`).
  */
 export function getAdminPb(): PocketBase {
@@ -27,12 +27,24 @@ function redirectToLogin(): void {
   if (typeof window !== 'undefined') window.location.replace('/admin/login/');
 }
 
+export type AdminSession = {
+  id: string;
+  email: string;
+  name: string;
+  /** Id du club rattaché, ou '' pour la coordination nationale (accès complet). */
+  clubId: string;
+  clubName: string;
+  isNational: boolean;
+};
+
 /**
- * Vérifie la session du compte des clubs et retourne l'e-mail connecté.
- * Les anciennes sessions superuser sont invalidées (compte dédié désormais).
+ * Vérifie la session du compte et retourne son périmètre.
+ * - national (`club` vide) : gère tous les clubs, actions et événements.
+ * - admin de club (`club` = id) : ne gère que sa fiche club et les
+ *   actions/événements qui mentionnent son club (seul ou en multi-clubs).
  * Redirige vers `/admin/login/` si la session est absente ou expirée.
  */
-export async function ensureAdminSession(): Promise<string> {
+export async function ensureAdminSession(): Promise<AdminSession> {
   const pb = getAdminPb();
   const model = pb.authStore.model as { collectionName?: string } | null;
   if (!pb.authStore.isValid || model?.collectionName !== RMG_USERS_COLLECTION) {
@@ -41,10 +53,15 @@ export async function ensureAdminSession(): Promise<string> {
     throw new Error('Non connecté');
   }
   try {
-    const auth = (await pb.collection(RMG_USERS_COLLECTION).authRefresh()) as unknown as {
-      record: { email: string };
+    const auth = (await pb
+      .collection(RMG_USERS_COLLECTION)
+      .authRefresh({ expand: 'club' })) as unknown as {
+      record: { id: string; email: string; name?: string; club?: string; expand?: { club?: { id?: string; name?: string } } };
     };
-    return auth.record.email;
+    const expanded = auth.record.expand?.club;
+    const clubId = String(auth.record.club ?? expanded?.id ?? '');
+    const clubName = String(expanded?.name ?? '');
+    return { id: auth.record.id, email: auth.record.email, name: String(auth.record.name ?? ''), clubId, clubName, isNational: !clubId };
   } catch {
     pb.authStore.clear();
     redirectToLogin();

@@ -1,0 +1,232 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png';
+---
+
+<BaseLayout title="Mon compte — Administration Rotaract Madagascar" description="Paramètres du compte admin : nom affiché et mot de passe. Accès réservé.">
+  <meta name="robots" content="noindex,nofollow" slot="head" />
+  <a class="skip-link" href="#account-forms">Aller au formulaire</a>
+
+  <header class="admin-topbar">
+    <a class="brand" href="/" aria-label="Rotaract Madagascar, retour au site"><img src={logo} alt="Rotaract Madagasikara" /></a>
+    <p class="admin-who"><span class="admin-tag">Portail admin</span><span id="session-email" title="Compte connecté">…</span></p>
+    <div class="topbar-actions">
+      <a class="ghost-btn" href="/admin/">← Tableau de bord</a>
+      <button type="button" id="logout" class="header-cta">Se déconnecter</button>
+    </div>
+  </header>
+
+  <div class="admin-title">
+    <p class="eyebrow">PORTAIL ADMIN · MON COMPTE</p>
+    <h1>Paramètres du <em>compte</em>.</h1>
+  </div>
+
+  <main class="admin-main" id="account-forms">
+    <section class="card" aria-labelledby="info-title">
+      <h2 id="info-title">Votre accès</h2>
+      <dl class="info-grid">
+        <div><dt>E-mail de connexion</dt><dd id="info-email">…</dd></div>
+        <div><dt>Périmètre</dt><dd id="info-scope">…</dd></div>
+      </dl>
+      <p class="muted">L'e-mail de connexion est géré par la coordination nationale — contactez-la pour le faire changer.</p>
+    </section>
+
+    <section class="card" aria-labelledby="name-title">
+      <h2 id="name-title">Nom affiché</h2>
+      <form id="name-form" novalidate>
+        <label><span>Nom affiché</span><input type="text" name="name" id="name-input" maxlength="180" autocomplete="nickname" /></label>
+        <p class="form-error" id="name-error" role="alert" hidden></p>
+        <p class="form-ok" id="name-ok" role="status" hidden></p>
+        <button type="submit" id="name-submit">Enregistrer le nom</button>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="password-title">
+      <h2 id="password-title">Changer le mot de passe</h2>
+      <form id="password-form" novalidate>
+        <label><span>Mot de passe actuel *</span><input type="password" name="oldPassword" autocomplete="current-password" required /></label>
+        <label><span>Nouveau mot de passe * <small>(8 caractères minimum)</small></span><input type="password" name="password" autocomplete="new-password" minlength="8" required /></label>
+        <label><span>Confirmer le nouveau mot de passe *</span><input type="password" name="passwordConfirm" autocomplete="new-password" required /></label>
+        <p class="form-error" id="password-error" role="alert" hidden></p>
+        <p class="form-ok" id="password-ok" role="status" hidden></p>
+        <button type="submit" id="password-submit">Changer le mot de passe</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="admin-footer">
+    <div class="footer-identity">
+      <a class="footer-brand" href="/" aria-label="Rotaract Madagascar, retour au site"><img src={logo} alt="Rotaract Madagasikara" /></a>
+      <p>La camaraderie par le service.</p>
+    </div>
+    <a class="footer-back" href="/admin/">Tableau de bord <span aria-hidden="true">→</span></a>
+  </footer>
+</BaseLayout>
+
+<script>
+  import { RMG_USERS_COLLECTION, adminLogout, ensureAdminSession, getAdminPb } from '../../lib/admin';
+
+  const pb = getAdminPb();
+  const goLogin = () => window.location.replace('/admin/login/');
+  const handleAuthError = (err: any) => {
+    if (err?.status === 401 || err?.status === 403) { pb.authStore.clear(); goLogin(); return true; }
+    return false;
+  };
+
+  let accountId = '';
+
+  const show = (el: HTMLElement | null, message: string) => {
+    if (!el) return;
+    el.textContent = message;
+    el.hidden = false;
+  };
+  const hide = (el: HTMLElement | null) => { if (el) el.hidden = true; };
+
+  // Garde : sans session valide, retour au login.
+  ensureAdminSession()
+    .then((session) => {
+      accountId = session.id;
+      const label = session.isNational
+        ? `${session.email} · Coordination nationale`
+        : `${session.email} · ${session.clubName || 'Mon club'}`;
+      document.querySelector('#session-email')!.textContent = label;
+      document.querySelector('#info-email')!.textContent = session.email;
+      document.querySelector('#info-scope')!.textContent = session.isNational
+        ? 'Coordination nationale — tous les clubs, actions et événements.'
+        : `Admin du club — ${session.clubName || 'votre club'} (fiche + activités propres ou multi-clubs).`;
+      (document.querySelector('#name-input') as HTMLInputElement).value = session.name;
+    })
+    .catch(() => { /* redirection déjà effectuée */ });
+
+  document.querySelector('#logout')!.addEventListener('click', adminLogout);
+
+  // Nom affiché.
+  document.querySelector('#name-form')!.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const error = document.querySelector<HTMLElement>('#name-error')!;
+    const ok = document.querySelector<HTMLElement>('#name-ok')!;
+    const submit = document.querySelector<HTMLButtonElement>('#name-submit')!;
+    hide(error); hide(ok);
+    const name = (document.querySelector('#name-input') as HTMLInputElement).value.trim();
+    if (!name) {
+      show(error, 'Saisissez un nom affiché.');
+      return;
+    }
+    submit.disabled = true;
+    try {
+      await pb.collection(RMG_USERS_COLLECTION).update(accountId, { name });
+      show(ok, 'Nom affiché enregistré.');
+    } catch (err) {
+      if (!handleAuthError(err)) show(error, 'Enregistrement impossible. Réessayez.');
+    } finally {
+      submit.disabled = false;
+    }
+  });
+
+  // Mot de passe (PocketBase exige l'ancien pour un compte non superuser).
+  document.querySelector('#password-form')!.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.target as HTMLFormElement;
+    const error = document.querySelector<HTMLElement>('#password-error')!;
+    const ok = document.querySelector<HTMLElement>('#password-ok')!;
+    const submit = document.querySelector<HTMLButtonElement>('#password-submit')!;
+    hide(error); hide(ok);
+    const data = new FormData(form);
+    const oldPassword = String(data.get('oldPassword') || '');
+    const password = String(data.get('password') || '');
+    const passwordConfirm = String(data.get('passwordConfirm') || '');
+    if (!oldPassword || !password || !passwordConfirm) {
+      show(error, 'Remplissez les trois champs.');
+      return;
+    }
+    if (password.length < 8) {
+      show(error, 'Le nouveau mot de passe doit faire au moins 8 caractères.');
+      return;
+    }
+    if (password !== passwordConfirm) {
+      show(error, 'La confirmation ne correspond pas au nouveau mot de passe.');
+      return;
+    }
+    submit.disabled = true;
+    try {
+      await pb.collection(RMG_USERS_COLLECTION).update(accountId, { oldPassword, password, passwordConfirm });
+      form.reset();
+      show(ok, 'Mot de passe changé. Utilisez-le à votre prochaine connexion.');
+    } catch (err: any) {
+      if (!handleAuthError(err)) {
+        const detail = err?.data?.data
+          ? Object.values(err.data.data).map((d: any) => d?.message).filter(Boolean).join(' ')
+          : '';
+        show(error, detail || (err?.status === 400 ? 'Mot de passe actuel incorrect.' : 'Changement impossible. Vérifiez les champs.'));
+      }
+    } finally {
+      submit.disabled = false;
+    }
+  });
+</script>
+
+<style is:global>
+  :root{--cranberry:#d41367;--blue:#17458f;--blue-dark:#17458f;--gold:#f7a81b;--ink:#54565a;--muted:#657f99;--line:#d0cfcd;--paper:#ffffff;--white:#ffffff}
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Open Sans',Arial,sans-serif}
+  a,button,input{font:inherit}
+  [hidden]{display:none!important}
+  a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+  .skip-link{position:fixed;top:-5rem;left:1rem;z-index:10;background:var(--paper);color:var(--blue-dark);padding:.8rem 1rem;font-weight:800}
+  .skip-link:focus{top:1rem}
+
+  .admin-topbar{position:relative;z-index:20;display:grid;grid-template-columns:auto 1fr auto;align-items:center;min-height:5.5rem;padding:.85rem clamp(1.25rem,6vw,6.5rem);background:var(--white);border-top:.38rem solid var(--cranberry);border-bottom:1px solid var(--line)}
+  .brand{display:inline-flex;align-items:center;width:max-content}
+  .brand img{display:block;width:auto;height:3.25rem}
+  .admin-who{display:flex;align-items:center;justify-content:flex-end;gap:1rem;margin:0 clamp(1.25rem,3vw,3rem) 0 auto}
+  .admin-tag{padding:.32rem .65rem;background:var(--blue);color:var(--white);font-size:.68rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+  #session-email{max-width:18rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);font-size:.9rem;font-weight:700}
+  .topbar-actions{display:flex;align-items:center;gap:.75rem}
+  .ghost-btn{display:inline-flex;align-items:center;min-height:3rem;padding:.8rem 1.05rem;border:1px solid var(--line);color:var(--ink);font-weight:800;text-decoration:none;white-space:nowrap}
+  .ghost-btn:hover{border-color:var(--blue);color:var(--blue)}
+  .header-cta{display:inline-flex;align-items:center;min-height:3rem;padding:.8rem 1.05rem;border:0;background:var(--cranberry);color:var(--white);font-weight:800;cursor:pointer;transition:transform 180ms cubic-bezier(.22,1,.36,1),background 180ms ease}
+  .header-cta:hover{background:var(--blue);transform:translateY(-2px)}
+
+  .admin-title{padding:clamp(4rem,7vw,6.5rem) clamp(1.5rem,8vw,8rem) 0}
+  .eyebrow{margin:0 0 1.6rem;color:var(--cranberry);font-size:.72rem;font-weight:800;letter-spacing:.14em}
+  .admin-title h1{margin:0;max-width:14ch;color:var(--blue-dark);font:700 clamp(3.1rem,4.5vw,5.1rem)/.94 'Open Sans',Arial,sans-serif;letter-spacing:-.055em}
+  .admin-title h1 em{color:var(--cranberry);font-style:normal}
+
+  .admin-main{display:grid;gap:1.5rem;max-width:44rem;padding:2.5rem clamp(1.5rem,8vw,8rem) clamp(5rem,9vw,8rem)}
+  .card{border:1px solid var(--line);border-top:.38rem solid var(--cranberry);padding:1.5rem}
+  .card h2{margin:0 0 1.25rem;color:var(--blue-dark);font-size:1.25rem;letter-spacing:-.02em}
+  .info-grid{display:grid;gap:1rem;margin:0}
+  .info-grid div{display:grid;gap:.3rem}
+  .info-grid dt{font-size:.78rem;font-weight:800;color:var(--blue-dark)}
+  .info-grid dd{margin:0;font-size:.95rem;line-height:1.5;overflow-wrap:anywhere}
+  .muted{margin:1.25rem 0 0;color:var(--muted);font-size:.88rem;line-height:1.6}
+  form{display:grid;gap:1.1rem}
+  label{display:grid;gap:.4rem;font-size:.8rem;font-weight:800;color:var(--blue-dark)}
+  label small{font-weight:400;color:var(--muted)}
+  input{min-height:3rem;padding:.7rem .9rem;border:1px solid var(--line);font-weight:400;color:var(--ink);background:var(--paper);width:100%}
+  .form-error{margin:0;padding:.8rem 1rem;background:var(--white);border:1px solid var(--line);border-left:.3rem solid var(--cranberry);color:var(--cranberry);font-size:.85rem;font-weight:700}
+  .form-ok{margin:0;padding:.8rem 1rem;background:var(--white);border:1px solid var(--line);border-left:.3rem solid var(--blue);color:var(--blue-dark);font-size:.85rem;font-weight:700}
+  form button{justify-self:start;min-height:3rem;display:inline-flex;align-items:center;padding:.7rem 1.25rem;border:0;background:var(--cranberry);color:var(--paper);font-weight:800;cursor:pointer;transition:transform 180ms cubic-bezier(.22,1,.36,1),background 180ms ease}
+  form button:hover{background:var(--blue);transform:translateY(-2px)}
+  form button:disabled{opacity:.6;cursor:wait;transform:none}
+
+  .admin-footer{display:flex;justify-content:space-between;align-items:end;gap:2rem;padding:3rem clamp(1.5rem,8vw,8rem);background:var(--blue);color:var(--white)}
+  .footer-brand{display:inline-flex;padding:.75rem;background:var(--white)}
+  .footer-brand img{display:block;width:11rem;max-width:100%;height:auto}
+  .admin-footer p{margin:1rem 0 0;color:var(--gold);font-weight:800}
+  .footer-back{color:var(--white);font-weight:800;text-decoration:none;white-space:nowrap}
+  .footer-back:hover{color:var(--gold)}
+
+  @media (max-width: 960px) {
+    .admin-topbar{grid-template-columns:auto 1fr}
+    .topbar-actions{grid-column:1/-1;justify-self:start}
+    .admin-who{margin-right:0}
+  }
+  @media (max-width: 640px) {
+    .brand img{height:2.45rem}
+    #session-email{display:none}
+    .admin-footer{flex-direction:column;align-items:start}
+  }
+</style>

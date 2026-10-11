@@ -8,7 +8,7 @@
  *   PB_URL="https://rtc-amontana.pockethost.io" PB_ADMIN_EMAIL="…" PB_ADMIN_PASSWORD="…" node scripts/setup-rmg-clubs.mjs
  */
 import PocketBase from 'pocketbase';
-import { RMG_URL, RMG_EDITOR_RULE, RMG_PUBLIC_OR_EDITOR_RULE, applyContentRules } from './rmg-common.mjs';
+import { RMG_URL, RMG_CLUB_CREATE_DELETE_RULE, RMG_CLUB_UPDATE_RULE, RMG_PUBLIC_OR_EDITOR_RULE, applyScopedRules } from './rmg-common.mjs';
 
 const URL = RMG_URL;
 const EMAIL = process.env.PB_ADMIN_EMAIL;
@@ -57,7 +57,8 @@ const SEED = [
 ];
 
 const PUBLIC_ACTIVE_RULE = RMG_PUBLIC_OR_EDITOR_RULE;
-const WRITE_RULE = RMG_EDITOR_RULE;
+const CLUB_WRITE_RULE = RMG_CLUB_UPDATE_RULE;
+const CLUB_ADMIN_RULE = RMG_CLUB_CREATE_DELETE_RULE;
 
 let collection = await pb.collections.getOne('rmg_clubs').catch(() => null);
 
@@ -67,12 +68,13 @@ if (!collection) {
     type: 'base',
     schema: SCHEMA,
     indexes: ['CREATE UNIQUE INDEX idx_rmg_clubs_slug ON rmg_clubs (slug)'],
-    // Lecture publique des clubs actifs ; écriture réservée au compte des clubs (`rmg_users`).
+    // Lecture publique des clubs actifs ; création/suppression au national,
+    // modification au national ou au club lui-même (`rmg_users`).
     listRule: PUBLIC_ACTIVE_RULE,
     viewRule: PUBLIC_ACTIVE_RULE,
-    createRule: WRITE_RULE,
-    updateRule: WRITE_RULE,
-    deleteRule: WRITE_RULE,
+    createRule: CLUB_ADMIN_RULE,
+    updateRule: CLUB_WRITE_RULE,
+    deleteRule: CLUB_ADMIN_RULE,
   });
   console.log('✓ collection `rmg_clubs` créée (lecture publique active=true, écriture compte clubs)');
 } else {
@@ -83,13 +85,13 @@ if (!collection) {
   const patch = {};
   if (removed || additions.length) patch.schema = [...kept, ...additions];
   // Harmonise les règles même si la collection existait déjà (sans écraser :
-  // `applyContentRules` ne touche que ce qui diffère du standard).
+  // `applyScopedRules` ne touche que ce qui diffère du standard).
   if (Object.keys(patch).length) {
     collection = await pb.collections.update(collection.id, patch);
     console.log(`✓ collection \`rmg_clubs\` mise à jour (retirés: ${removed}, ajoutés: ${additions.map((f) => f.name).join(', ') || '—'})`);
   }
-  if (await applyContentRules(pb, 'rmg_clubs')) {
-    console.log('✓ règles `rmg_clubs` alignées (écriture compte clubs)');
+  if (await applyScopedRules(pb)) {
+    console.log('✓ règles `rmg_*` alignées (national + admins par club)');
   } else if (!Object.keys(patch).length) {
     console.log('· collection `rmg_clubs` déjà à jour');
   }

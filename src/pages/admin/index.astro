@@ -11,7 +11,10 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
   <header class="admin-topbar">
     <a class="brand" href="/" aria-label="Rotaract Madagascar, retour au site"><img src={logo} alt="Rotaract Madagasikara" /></a>
     <p class="admin-who"><span class="admin-tag">Portail admin</span><span id="session-email" title="Compte connecté">…</span></p>
-    <button type="button" id="logout" class="header-cta">Se déconnecter</button>
+    <div class="topbar-actions">
+      <a class="ghost-btn" href="/admin/compte/">Mon compte</a>
+      <button type="button" id="logout" class="header-cta">Se déconnecter</button>
+    </div>
   </header>
 
   <div class="admin-title">
@@ -142,7 +145,7 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
       collection: RMG_ACTIONS_COLLECTION,
       plural: 'Actions des clubs',
       singular: 'action',
-      hint: 'Actions menées par les clubs, affichées dans « Dernières activités ». Laissez le club vide pour une action interclubs / commune.',
+      hint: 'Actions menées par les clubs, affichées dans « Dernières activités ». Chaque action inclut au moins un club (le vôtre est toujours inclus ; plusieurs = multi-clubs). Les actions interclubs sans club sont publiées par la coordination nationale.',
       titleField: 'title',
       sort: '-created',
       subtitle: (r) => [clubNameOf(r) || 'Interclubs', formatShortDate(r.date), r.lieu].filter(Boolean).join(' · '),
@@ -166,7 +169,7 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
       collection: RMG_EVENTS_COLLECTION,
       plural: 'Événements des clubs',
       singular: 'événement',
-      hint: 'Événements à venir affichés dans « Prochainement ». Laissez le club vide pour un événement interclubs / commun.',
+      hint: 'Événements à venir affichés dans « Prochainement ». Chaque événement inclut au moins un club (le vôtre est toujours inclus ; plusieurs = multi-clubs). Les événements interclubs sans club sont publiés par la coordination nationale.',
       titleField: 'title',
       sort: '-created',
       subtitle: (r) => [clubNameOf(r) || 'Interclubs', formatShortDate(r.date) || 'Date à confirmer', r.lieu].filter(Boolean).join(' · '),
@@ -208,6 +211,10 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
   let clubOptionsLoaded = false;
   let editingId: string | null = null;
   let slugTouched = false;
+  // Périmètre de la session : national (club vide) ou admin d'un club.
+  let sessionClubId = '';
+  let sessionClubName = '';
+  let isNational = true;
 
   const active = () => RESOURCES.find((r) => r.key === activeKey)!;
   const clubIdsOf = (row: Row): string[] => {
@@ -260,6 +267,16 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
         clubOptions = (clubs as unknown as Row[]).map((c) => ({ id: String(c.id), name: String(c.name ?? '') }));
         clubOptionsLoaded = true;
       }
+      // Cloisonnement côté portail (les règles serveur refusent de toute
+      // façon le hors-périmètre) : un admin de club ne voit que sa fiche
+      // et les actions/événements qui mentionnent son club.
+      if (!isNational && sessionClubId) {
+        if (active().key === 'clubs') {
+          rows = rows.filter((r) => String(r.id) === sessionClubId);
+        } else {
+          rows = rows.filter((r) => clubIdsOf(r).includes(sessionClubId));
+        }
+      }
       if (active().orderRows) rows = active().orderRows!(rows);
       const count = document.querySelector<HTMLElement>(`#count-${activeKey}`);
       if (count) count.textContent = String(rows.length);
@@ -287,23 +304,31 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
   }
 
   function render() {
-    hint.textContent = active().hint;
+    const scopedClub = !isNational && sessionClubId;
+    hint.textContent = scopedClub && active().key !== 'clubs'
+      ? `${active().hint} Votre club (${sessionClubName || 'votre club'}) est toujours inclus : décochez les partenaires pour une action propre au club, cochez-en pour du multi-clubs.`
+      : scopedClub
+        ? `Fiche de votre club (${sessionClubName || 'votre club'}) : mettez à jour vos coordonnées et votre présentation.`
+        : active().hint;
     createBtn.textContent = `＋ Nouveau ${active().singular}`;
+    // Un admin de club ne crée ni ne supprime de fiche club (serveur : refusé).
+    createBtn.hidden = Boolean(scopedClub && active().key === 'clubs');
     empty.hidden = rows.length !== 0;
     list.replaceChildren();
     rows.forEach((row) => {
       const li = document.createElement('li');
       li.className = 'record';
       const visible = row.active !== false;
+      const canDelete = isNational || !sessionClubId || active().key !== 'clubs';
       li.innerHTML =
         `<span class="dot ${visible ? 'on' : 'off'}" title="${visible ? 'Visible' : 'Masqué'}"></span>` +
         `<div class="record-copy"><strong>${esc(row[active().titleField] || '(sans titre)')}</strong>` +
         `<span>${esc(active().subtitle(row))}</span></div>` +
         `<span class="badge ${visible ? 'on' : 'off'}">${visible ? 'Visible' : 'Masqué'}</span>` +
         `<div class="record-actions"><button type="button" data-edit>Modifier</button>` +
-        `<button type="button" data-delete class="danger">Supprimer</button></div>`;
+        (canDelete ? `<button type="button" data-delete class="danger">Supprimer</button>` : '') + `</div>`;
       li.querySelector('[data-edit]')!.addEventListener('click', () => openEditor(row));
-      li.querySelector('[data-delete]')!.addEventListener('click', () => removeRow(row));
+      li.querySelector('[data-delete]')?.addEventListener('click', () => removeRow(row));
       list.append(li);
     });
   }
@@ -329,8 +354,13 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
     }
     if (field.type === 'clubs') {
       const selected = new Set(clubIdsOf({ club: value }));
-      const boxes = clubOptions.map((c) =>
-        `<label class="mini-check"><input type="checkbox" name="${field.name}" value="${esc(c.id)}"${selected.has(c.id) ? ' checked' : ''} /><span>${esc(c.name)}</span></label>`).join('');
+      // Un admin de club publie toujours en son nom : son club est
+      // pré-coché et verrouillé (le serveur refuse sans lui).
+      if (!isNational && sessionClubId) selected.add(sessionClubId);
+      const boxes = clubOptions.map((c) => {
+        const locked = !isNational && sessionClubId === c.id;
+        return `<label class="mini-check"><input type="checkbox" name="${field.name}" value="${esc(c.id)}"${selected.has(c.id) ? ' checked' : ''}${locked ? ' disabled' : ''} /><span>${esc(c.name)}${locked ? ' (votre club)' : ''}</span></label>`;
+      }).join('');
       return `<fieldset class="clubs-field"><legend>${esc(field.label)}${field.required ? ' *' : ''}</legend><div class="clubs-grid">${boxes || '<small>Aucun club en base pour le moment.</small>'}</div>${hintHtml}</fieldset>`;
     }
     const inputType = field.type === 'number' ? 'number' : field.type === 'email' ? 'email' : field.type === 'url' ? 'url' : 'text';
@@ -366,6 +396,14 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
           .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
       });
     }
+    // Un admin de club ne change pas le slug (URL publique) de sa fiche.
+    if (!isNational && sessionClubId && res.key === 'clubs') {
+      const slugInput = dialogFields.querySelector<HTMLInputElement>('input[name="slug"]');
+      if (slugInput) {
+        slugInput.readOnly = true;
+        slugInput.title = 'Le slug (adresse publique) est géré par la coordination nationale.';
+      }
+    }
     dialog.showModal();
   }
 
@@ -382,7 +420,11 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
     let valid = true;
     res.fields.forEach((field) => {
       if (field.type === 'clubs') {
-        payload[field.name] = [...dialogForm.querySelectorAll<HTMLInputElement>(`input[name="${field.name}"]:checked`)].map((el) => el.value);
+        const picked = [...dialogForm.querySelectorAll<HTMLInputElement>(`input[name="${field.name}"]:checked`)].map((el) => el.value);
+        // Garde-fou : le club de l'admin est toujours inclus (case verrouillée
+        // + règle serveur). Les `disabled` ne remontent pas toujours : on force.
+        if (!isNational && sessionClubId && !picked.includes(sessionClubId)) picked.push(sessionClubId);
+        payload[field.name] = picked;
         return;
       }
       const control = dialogForm.elements.namedItem(field.name) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
@@ -410,6 +452,10 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
     }
     saveBtn.disabled = true;
     try {
+      // Garde-fou portail : un admin de club ne touche qu'à sa fiche.
+      if (!isNational && sessionClubId && res.key === 'clubs') {
+        if (!editingId || editingId !== sessionClubId) throw new Error('hors-perimetre');
+      }
       if (editingId) {
         await pb.collection(res.collection).update(editingId, payload);
         notify(`${res.singular} mis à jour.`);
@@ -422,7 +468,9 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
       await loadAll();
     } catch (err: any) {
       if (!handleAuthError(err)) {
-        const detail = err?.data?.data ? Object.values(err.data.data).map((d: any) => d?.message).filter(Boolean).join(' ') : '';
+        const detail = err?.message === 'hors-perimetre'
+          ? 'Votre compte ne peut modifier que la fiche de son club.'
+          : err?.data?.data ? Object.values(err.data.data).map((d: any) => d?.message).filter(Boolean).join(' ') : '';
         dialogError.textContent = detail || 'Enregistrement impossible. Vérifiez les champs.';
         dialogError.hidden = false;
       }
@@ -433,6 +481,10 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
 
   async function removeRow(row: Row) {
     const res = active();
+    if (!isNational && sessionClubId && res.key === 'clubs') {
+      notify('Votre compte ne peut pas supprimer de fiche club.');
+      return;
+    }
     const label = String(row[res.titleField] || 'cet élément');
     if (!window.confirm(`Supprimer définitivement « ${label} » ?`)) return;
     try {
@@ -459,10 +511,16 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
   document.querySelector('#logout')!.addEventListener('click', adminLogout);
   createBtn.addEventListener('click', () => openEditor());
 
-  // Garde : sans session admin valide, retour au login.
+  // Garde : sans session valide, retour au login.
+  // Le périmètre (national vs club) pilote le cloisonnement du portail.
   ensureAdminSession()
-    .then((email) => {
-      document.querySelector('#session-email')!.textContent = email;
+    .then((session) => {
+      sessionClubId = session.clubId;
+      sessionClubName = session.clubName;
+      isNational = session.isNational;
+      const who = document.querySelector('#session-email')!;
+      who.textContent = isNational ? `${session.email} · Coordination nationale` : `${session.email} · ${sessionClubName || 'Mon club'}`;
+      who.setAttribute('title', who.textContent || '');
       loadAll();
     })
     .catch(() => { /* redirection déjà effectuée */ });
@@ -490,6 +548,9 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
   #session-email{max-width:18rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);font-size:.9rem;font-weight:700}
   .header-cta{display:inline-flex;align-items:center;min-height:3rem;padding:.8rem 1.05rem;border:0;background:var(--cranberry);color:var(--white);font-weight:800;cursor:pointer;transition:transform 180ms cubic-bezier(.22,1,.36,1),background 180ms ease}
   .header-cta:hover{background:var(--blue);transform:translateY(-2px)}
+  .topbar-actions{display:flex;align-items:center;gap:.75rem}
+  .ghost-btn{display:inline-flex;align-items:center;min-height:3rem;padding:.8rem 1.05rem;border:1px solid var(--line);color:var(--ink);font-weight:800;text-decoration:none;white-space:nowrap}
+  .ghost-btn:hover{border-color:var(--blue);color:var(--blue)}
 
   .admin-title{padding:clamp(4rem,7vw,6.5rem) clamp(1.5rem,8vw,8rem) 0}
   .eyebrow{margin:0 0 1.6rem;color:var(--cranberry);font-size:.72rem;font-weight:800;letter-spacing:.14em}
@@ -568,7 +629,7 @@ const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png'
 
   @media (max-width: 960px) {
     .admin-topbar{grid-template-columns:auto 1fr}
-    #logout{grid-column:1/-1;justify-self:start}
+    .topbar-actions{grid-column:1/-1;justify-self:start}
     .admin-who{margin-right:0}
   }
   @media (max-width: 640px) {

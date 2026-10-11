@@ -7,7 +7,8 @@
     "dev": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
-    "db:setup": "node scripts/setup-rmg-clubs.mjs && node scripts/setup-rmg-program.mjs && node scripts/setup-rmg-users.mjs"
+    "db:setup": "node scripts/setup-rmg-clubs.mjs && node scripts/setup-rmg-program.mjs && node scripts/setup-rmg-users.mjs && node scripts/setup-rmg-club-admins.mjs",
+    "db:club-admins": "node scripts/setup-rmg-club-admins.mjs"
   },
   "dependencies": {
     "pocketbase": "^0.21.5"

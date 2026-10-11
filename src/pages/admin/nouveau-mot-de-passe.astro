@@ -1,0 +1,143 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const logo = 'https://rotaplast.rotary.mg/assets/rotaract-madagasikara-logo.png';
+---
+
+<BaseLayout title="Nouveau mot de passe — Rotaract Madagascar" description="Définissez un nouveau mot de passe à partir du lien reçu par e-mail.">
+  <meta name="robots" content="noindex,nofollow" slot="head" />
+  <main class="login-page">
+    <div class="login-hero">
+      <a class="back" href="/admin/login/">← Connexion admin</a>
+      <p class="eyebrow">PORTAIL ADMIN · MOT DE PASSE OUBLIÉ</p>
+      <h1>Choisir un <strong>nouveau</strong> mot de passe.</h1>
+      <p class="lead">Le lien reçu par e-mail reste valable quelques heures. Passé ce délai, refaites une demande depuis la page de connexion.</p>
+    </div>
+    <div class="login-side">
+      <form id="reset-form" class="login-card" novalidate>
+        <img src={logo} alt="Rotaract Madagasikara" />
+        <h2>Nouveau mot de passe</h2>
+        <p class="hint">8 caractères minimum. Évitez un mot de passe déjà utilisé ailleurs.</p>
+        <label><span>Nouveau mot de passe</span><input type="password" name="password" autocomplete="new-password" minlength="8" required /></label>
+        <label><span>Confirmer le mot de passe</span><input type="password" name="passwordConfirm" autocomplete="new-password" required /></label>
+        <p class="form-error" id="reset-error" role="alert" hidden></p>
+        <p class="form-ok" id="reset-ok" role="status" hidden></p>
+        <button type="submit" id="reset-submit">Enregistrer <span aria-hidden="true">→</span></button>
+        <p class="login-foot"><a href="/admin/login/">Retour à la connexion</a></p>
+      </form>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  import PocketBase from 'pocketbase';
+  import { PB_URL } from '../../lib/pocketbase';
+
+  const pb = new PocketBase(PB_URL);
+  pb.autoCancellation(false);
+
+  const form = document.querySelector<HTMLFormElement>('#reset-form')!;
+  const error = document.querySelector<HTMLElement>('#reset-error')!;
+  const ok = document.querySelector<HTMLElement>('#reset-ok')!;
+  const submit = document.querySelector<HTMLButtonElement>('#reset-submit')!;
+
+  const token = new URLSearchParams(window.location.search).get('token') || '';
+  if (!token) {
+    error.textContent = 'Lien incomplet : il manque le jeton. Reprenez le lien tel quel depuis l’e-mail, ou refaites une demande.';
+    error.hidden = false;
+    submit.disabled = true;
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    error.hidden = true;
+    ok.hidden = true;
+    if (!token) return;
+    const data = new FormData(form);
+    const password = String(data.get('password') || '');
+    const passwordConfirm = String(data.get('passwordConfirm') || '');
+    if (!password || !passwordConfirm) {
+      error.textContent = 'Remplissez les deux champs.';
+      error.hidden = false;
+      return;
+    }
+    if (password.length < 8) {
+      error.textContent = 'Le mot de passe doit faire au moins 8 caractères.';
+      error.hidden = false;
+      return;
+    }
+    if (password !== passwordConfirm) {
+      error.textContent = 'La confirmation ne correspond pas.';
+      error.hidden = false;
+      return;
+    }
+    submit.disabled = true;
+    submit.textContent = 'Enregistrement…';
+    // La base est partagée : le jeton peut venir d'un compte de club
+    // (`rmg_users`), d'un compte du site Amontana (`users`) ou d'un
+    // superuser — on essaie dans cet ordre.
+    const attempts: Array<() => Promise<unknown>> = [
+      () => pb.collection('rmg_users').confirmPasswordReset(token, password, passwordConfirm),
+      () => pb.collection('users').confirmPasswordReset(token, password, passwordConfirm),
+      () => pb.admins.confirmPasswordReset(token, password, passwordConfirm),
+    ];
+    let done = false;
+    for (const attempt of attempts) {
+      try {
+        await attempt();
+        done = true;
+        break;
+      } catch {
+        // Jeton d'une autre collection : on passe à la suivante.
+      }
+    }
+    if (done) {
+      form.querySelectorAll('input').forEach((el) => { el.disabled = true; });
+      submit.textContent = 'Enregistré ✓';
+      ok.innerHTML = 'Mot de passe enregistré. <a href="/admin/login/">Se connecter au portail des clubs →</a>';
+      ok.hidden = false;
+    } else {
+      error.textContent = 'Lien invalide ou expiré. Refaites une demande depuis la page de connexion.';
+      error.hidden = false;
+      submit.disabled = false;
+      submit.textContent = 'Enregistrer →';
+    }
+  });
+</script>
+
+<style>
+  :global(:root){--cranberry:#d41367;--blue:#17458f;--blue-dark:#17458f;--gold:#f7a81b;--paper:#ffffff;--white:#ffffff;--ink:#54565a;--muted:#657f99;--line:#d0cfcd}
+  :global(*){box-sizing:border-box}:global(body){margin:0;background:var(--paper);color:var(--ink);font-family:'Open Sans',Arial,sans-serif}
+  :global(a),:global(button),:global(input){font:inherit}
+  :global(a:focus-visible),:global(button:focus-visible),:global(input:focus-visible){outline:3px solid var(--gold);outline-offset:3px}
+  .login-page{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);min-height:100vh}
+  .login-hero{display:flex;flex-direction:column;justify-content:center;padding:clamp(3rem,7vw,6rem) clamp(2rem,7vw,7rem);background:var(--cranberry);color:var(--white);border-top:.38rem solid var(--cranberry)}
+  .back{align-self:flex-start;margin-bottom:2.5rem;color:var(--white);font-size:.85rem;font-weight:700;text-decoration:none}
+  .back:hover{color:var(--gold)}
+  .eyebrow{margin:0 0 1.4rem;color:var(--gold);font-size:.72rem;font-weight:800;letter-spacing:.14em}
+  .login-hero h1{margin:0;max-width:12ch;font:700 clamp(2.8rem,4.5vw,4.6rem)/.95 'Open Sans',Arial,sans-serif;letter-spacing:-.055em}
+  .login-hero h1 strong{color:var(--white);font-weight:700;text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:.075em;text-underline-offset:.1em}
+  .lead{max-width:28rem;margin:1.5rem 0 0;font-size:1.05rem;line-height:1.6;color:var(--white)}
+  .login-side{display:grid;place-items:center;padding:clamp(2rem,5vw,4rem) clamp(1.25rem,4vw,3rem)}
+  .login-card{width:min(26rem,100%);background:var(--paper);border-top:.38rem solid var(--cranberry);padding:2.5rem 2.25rem;box-shadow:0 1.5rem 4rem rgb(23 69 143/.12)}
+  .login-card img{display:block;width:11rem;max-width:100%;height:auto}
+  .login-card h2{margin:1.5rem 0 .4rem;color:var(--blue-dark);font-size:1.8rem;letter-spacing:-.03em}
+  .hint{margin:0 0 1.75rem;font-size:.9rem;line-height:1.55;color:var(--muted)}
+  #reset-form{display:grid;gap:1.1rem}
+  label{display:grid;gap:.4rem;font-size:.8rem;font-weight:800;color:var(--blue-dark)}
+  input{min-height:3rem;padding:.7rem .9rem;border:1px solid var(--line);font-weight:400;color:var(--ink);background:var(--paper)}
+  input:disabled{opacity:.55}
+  .form-error{margin:0;padding:.8rem 1rem;background:var(--white);border:1px solid var(--line);border-left:.3rem solid var(--cranberry);color:var(--cranberry);font-size:.85rem;font-weight:700}
+  .form-ok{margin:0;padding:.8rem 1rem;background:var(--white);border:1px solid var(--line);border-left:.3rem solid var(--blue);color:var(--blue-dark);font-size:.85rem;font-weight:700;line-height:1.6}
+  .form-ok a{color:var(--cranberry);font-weight:800}
+  button{min-height:3rem;display:inline-flex;align-items:center;justify-content:center;gap:1rem;border:0;background:var(--cranberry);color:var(--white);font-weight:800;cursor:pointer;transition:transform 180ms cubic-bezier(.22,1,.36,1),background 180ms ease}
+  button:hover{background:var(--blue);transform:translateY(-2px)}
+  button:disabled{opacity:.6;cursor:wait;transform:none}
+  .login-foot{margin:1.75rem 0 0;border-top:1px solid var(--line);padding-top:1rem;color:var(--muted);font-size:.85rem;font-weight:700}
+  .login-foot a{color:var(--cranberry)}
+  @media(max-width:860px){
+    .login-page{grid-template-columns:1fr;min-height:auto}
+    .login-hero{padding:3.5rem 1.35rem 2.5rem}
+    .login-hero h1{font-size:clamp(2.6rem,11vw,3.4rem)}
+  }
+</style>
