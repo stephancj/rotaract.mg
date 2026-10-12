@@ -45,19 +45,19 @@ const description = club.description?.trim()
 
     <section class="club-hero">
       <div>
-        <p class="eyebrow">CLUB ROTARACT · {club.city.toUpperCase()} · DISTRICT 9220</p>
-        <h1>{club.name}</h1>
+        <p class="eyebrow" data-hero style="--hd:.05s">CLUB ROTARACT · {club.city.toUpperCase()} · DISTRICT 9220</p>
+        <h1 data-hero style="--hd:.14s">{club.name}</h1>
         {club.description?.trim()
-          ? <p class="lead">{club.description}</p>
-          : <p class="lead">Un club Rotaract à {club.city}. Venez rencontrer l’équipe, découvrir ses projets et assister à une première réunion.</p>}
-        <div class="hero-actions">
+          ? <p class="lead" data-hero style="--hd:.24s">{club.description}</p>
+          : <p class="lead" data-hero style="--hd:.24s">Un club Rotaract à {club.city}. Venez rencontrer l’équipe, découvrir ses projets et assister à une première réunion.</p>}
+        <div class="hero-actions" data-hero style="--hd:.32s">
           {club.email
             ? <a class="button primary" href={`mailto:${club.email}`}>Écrire au club <span aria-hidden="true">→</span></a>
             : <a class="button primary" href={`/contact/?objet=rejoindre&club=${encodeURIComponent(club.name)}`}>Demander le contact <span aria-hidden="true">→</span></a>}
           <a class="button ghost" href="/#clubs">Voir tous les clubs</a>
         </div>
       </div>
-      <aside class="facts" aria-label="Informations pratiques">
+      <aside class="facts" aria-label="Informations pratiques" data-hero="pop" style="--hd:.3s">
         <h2>Informations pratiques</h2>
         <dl>
           <div><dt>Ville</dt><dd>{club.city}</dd></div>
@@ -78,19 +78,19 @@ const description = club.description?.trim()
     </section>
 
     <section class="steps" aria-label="Prochaines étapes">
-      <ol>
-        <li><span>01</span><div><h2>Contactez le club</h2><p>Présentez-vous et demandez à assister à une réunion ou à une action ouverte.</p></div></li>
-        <li><span>02</span><div><h2>Venez rencontrer l’équipe</h2><p>Découvrez l’ambiance du club, son fonctionnement et ses projets en cours.</p></div></li>
-        <li><span>03</span><div><h2>Engagez-vous à votre rythme</h2><p>Les modalités d’adhésion sont présentées clairement par le club avant tout engagement.</p></div></li>
+      <ol data-reveal-group>
+        <li data-reveal><span>01</span><div><h2>Contactez le club</h2><p>Présentez-vous et demandez à assister à une réunion ou à une action ouverte.</p></div></li>
+        <li data-reveal><span>02</span><div><h2>Venez rencontrer l’équipe</h2><p>Découvrez l’ambiance du club, son fonctionnement et ses projets en cours.</p></div></li>
+        <li data-reveal><span>03</span><div><h2>Engagez-vous à votre rythme</h2><p>Les modalités d’adhésion sont présentées clairement par le club avant tout engagement.</p></div></li>
       </ol>
     </section>
 
     {others.length > 0 && (
       <section class="siblings" aria-label="Autres clubs">
-        <header><h2>Découvrir d’autres clubs</h2><a href="/#clubs">Tout l’annuaire →</a></header>
-        <div class="sibling-grid">
+        <header data-reveal><h2>Découvrir d’autres clubs</h2><a href="/#clubs">Tout l’annuaire →</a></header>
+        <div class="sibling-grid" data-reveal-group>
           {others.map((other, i) => (
-            <a class="sibling-card" href={`/clubs/${other.slug}/`}>
+            <a class="sibling-card" data-reveal href={`/clubs/${other.slug}/`}>
               <span class="sibling-index">{String(i + 1).padStart(2, '0')} · {other.city}</span>
               <strong>{other.name}</strong>
               <span class="sibling-meta">{other.area} · {other.meeting}</span>

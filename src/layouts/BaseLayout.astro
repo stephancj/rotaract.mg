@@ -1,4 +1,6 @@
 ---
+import '../styles/motion.css';
+
 interface Props { title?: string; description?: string }
 const { title = 'Rotaract Madagasikara', description = 'Une génération engagée pour Madagascar.' } = Astro.props;
 ---
@@ -15,6 +17,7 @@ const { title = 'Rotaract Madagasikara', description = 'Une génération engagé
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wdth,wght@0,75..100,300..800;1,75..100,300..800&display=swap" rel="stylesheet" />
+    <script src="/motion.js" defer></script>
     <slot name="head" />
   </head>
   <body>

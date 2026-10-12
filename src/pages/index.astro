@@ -46,64 +46,66 @@ const rotaractMadagasikaraLogo = 'https://rotaplast.rotary.mg/assets/rotaract-ma
   </header>
 
   <main id="contenu">
-    <section class="hero" id="top">
+    <section class="hero grain" id="top">
       <div class="hero-copy">
-        <p class="context">ROTARACT MADAGASIKARA · DISTRICT 9220</p>
-        <h1 aria-label="À Madagascar, nous agissons ensemble.">
+        <p class="context" data-hero style="--hd:.05s">ROTARACT MADAGASIKARA · DISTRICT 9220</p>
+        <h1 aria-label="À Madagascar, nous agissons ensemble." data-hero style="--hd:.14s">
           <span aria-hidden="true">À Madagascar,</span><br />
           <span aria-hidden="true">nous <strong class="hero-word" data-hero-word>agissons ensemble.</strong></span>
         </h1>
-        <p class="hero-lead">Nous sommes des jeunes adultes de 18 ans et plus, réunis dans des clubs autonomes pour servir nos communautés, développer notre leadership et construire des amitiés qui dépassent les frontières.</p>
-        <div class="hero-motto">
+        <p class="hero-lead" data-hero style="--hd:.26s">Nous sommes des jeunes adultes de 18 ans et plus, réunis dans des clubs autonomes pour servir nos communautés, développer notre leadership et construire des amitiés qui dépassent les frontières.</p>
+        <div class="hero-motto" data-hero style="--hd:.34s">
           <span>Notre devise</span>
           <strong>La camaraderie par le service.</strong>
         </div>
-        <div class="hero-actions">
+        <div class="hero-actions" data-hero style="--hd:.42s">
           <a class="button primary" href="#clubs">Trouver mon club <span aria-hidden="true">↓</span></a>
           <a class="text-link" href="#mission">Comprendre le Rotaract <span aria-hidden="true">→</span></a>
         </div>
-        <ul class="proof-line" aria-label="Repères du réseau">
-          <li><b>{clubs.length}</b> clubs référencés</li>
-          <li><b>{new Set(clubs.map((c) => c.city)).size}</b> villes représentées</li>
+        <ul class="proof-line" aria-label="Repères du réseau" data-hero style="--hd:.5s">
+          <li><b data-count={clubs.length}>{clubs.length}</b> clubs référencés</li>
+          <li><b data-count={new Set(clubs.map((c) => c.city)).size}>{new Set(clubs.map((c) => c.city)).size}</b> villes représentées</li>
           <li>District <b>9220</b></li>
         </ul>
       </div>
-      <figure class="hero-visual">
-        <img src="https://www.rotaractamontana.org/_next/image?q=82&amp;url=https%3A%2F%2Frtc-amontana.pockethost.io%2Fapi%2Ffiles%2Fh0wsjdz57emczo6%2Fskoguofvhtlvklo%2Fwcd_lyuj_qz9_gq_i_kRKxTaI7Ve.jpg&amp;w=1080" alt="Rotaractiens d’Amontana et de Tsinjo réunis pour une action environnementale au Rova d’Ilafy" />
+      <figure class="hero-visual" data-hero="clip" style="--hd:.2s">
+        <img class="kenburns" data-parallax="0.06" src="https://www.rotaractamontana.org/_next/image?q=82&amp;url=https%3A%2F%2Frtc-amontana.pockethost.io%2Fapi%2Ffiles%2Fh0wsjdz57emczo6%2Fskoguofvhtlvklo%2Fwcd_lyuj_qz9_gq_i_kRKxTaI7Ve.jpg&amp;w=1080" alt="Rotaractiens d’Amontana et de Tsinjo réunis pour une action environnementale au Rova d’Ilafy" />
         <figcaption><span>Des clubs en mouvement</span><strong>Agir ensemble, localement.</strong><a href="#clubs">Rencontrer un club →</a></figcaption>
       </figure>
     </section>
 
+    <div class="marquee" aria-hidden="true"><div class="marquee-track"><span>La camaraderie par le service <i>✳</i> District 9220 <i>✳</i> Agir · Apprendre · Servir <i>✳</i> Madagascar <i>✳</i>&nbsp;</span><span>La camaraderie par le service <i>✳</i> District 9220 <i>✳</i> Agir · Apprendre · Servir <i>✳</i> Madagascar <i>✳</i>&nbsp;</span></div></div>
+
     <section class="mission" id="mission">
-      <div class="section-intro">
+      <div class="section-intro" data-reveal>
         <p class="section-index">01 · LE MOUVEMENT</p>
         <h2>La camaraderie <br />par <em>le service.</em></h2>
       </div>
       <div class="mission-content">
-        <p class="mission-lead">Le Rotaract réunit les personnes de 18 ans et plus autour d’une même dynamique : apprendre par l’action, servir l’intérêt général et avancer avec une communauté ouverte sur le monde.</p>
-        <ol class="principles">
-          <li><span>01</span><div><h3>Agir dans sa communauté</h3><p>Chaque club choisit et construit des projets adaptés aux réalités de son territoire.</p></div></li>
-          <li><span>02</span><div><h3>Grandir par l’expérience</h3><p>Organiser, décider, prendre la parole et développer son leadership sur le terrain.</p></div></li>
-          <li><span>03</span><div><h3>Créer des liens</h3><p>Rejoindre une communauté de personnes engagées à Madagascar et dans le monde.</p></div></li>
+        <p class="mission-lead" data-reveal>Le Rotaract réunit les personnes de 18 ans et plus autour d’une même dynamique : apprendre par l’action, servir l’intérêt général et avancer avec une communauté ouverte sur le monde.</p>
+        <ol class="principles" data-reveal-group>
+          <li data-reveal><span>01</span><div><h3>Agir dans sa communauté</h3><p>Chaque club choisit et construit des projets adaptés aux réalités de son territoire.</p></div></li>
+          <li data-reveal><span>02</span><div><h3>Grandir par l’expérience</h3><p>Organiser, décider, prendre la parole et développer son leadership sur le terrain.</p></div></li>
+          <li data-reveal><span>03</span><div><h3>Créer des liens</h3><p>Rejoindre une communauté de personnes engagées à Madagascar et dans le monde.</p></div></li>
         </ol>
       </div>
     </section>
 
     <section class="club-life" id="experience">
-      <div class="club-life-heading">
+      <div class="club-life-heading" data-reveal>
         <span>Ce que l’on vit dans un club</span>
         <h2>Plus qu’un engagement, <strong>une expérience qui transforme.</strong></h2>
       </div>
-      <div class="club-life-list">
-        <article><b>01</b><h3>Des actions utiles</h3><p>Identifier un besoin, imaginer une réponse et agir concrètement avec les acteurs locaux.</p></article>
-        <article><b>02</b><h3>Des compétences réelles</h3><p>Apprendre à piloter un projet, communiquer, mobiliser une équipe et prendre des responsabilités.</p></article>
-        <article><b>03</b><h3>Une communauté vivante</h3><p>Partager des rencontres, des événements et des moments de camaraderie au-delà des projets.</p></article>
-        <article><b>04</b><h3>Un réseau international</h3><p>Échanger avec les clubs du District 9220 et rejoindre un mouvement présent dans le monde entier.</p></article>
+      <div class="club-life-list" data-reveal-group>
+        <article data-reveal><b>01</b><h3>Des actions utiles</h3><p>Identifier un besoin, imaginer une réponse et agir concrètement avec les acteurs locaux.</p></article>
+        <article data-reveal><b>02</b><h3>Des compétences réelles</h3><p>Apprendre à piloter un projet, communiquer, mobiliser une équipe et prendre des responsabilités.</p></article>
+        <article data-reveal><b>03</b><h3>Une communauté vivante</h3><p>Partager des rencontres, des événements et des moments de camaraderie au-delà des projets.</p></article>
+        <article data-reveal><b>04</b><h3>Un réseau international</h3><p>Échanger avec les clubs du District 9220 et rejoindre un mouvement présent dans le monde entier.</p></article>
       </div>
     </section>
 
-    <section class="clubs" id="clubs">
-      <div class="clubs-heading">
+    <section class="clubs grain" id="clubs">
+      <div class="clubs-heading" data-reveal>
         <div>
           <p class="section-index light">02 · LE RÉSEAU</p>
           <h2>Trouvez votre <br /><em>club Rotaract.</em></h2>
@@ -124,10 +126,10 @@ const rotaractMadagasikaraLogo = 'https://rotaplast.rotary.mg/assets/rotaract-ma
         <button class="clear-filters" type="button" hidden>Effacer</button>
       </div>
 
-      <p class="club-results" aria-live="polite"><b id="club-count">{Math.min(4, clubs.length)}</b> <span id="club-count-label">clubs affichés sur {clubs.length}</span></p>
-      <div class="club-grid">
+      <p class="club-results" aria-live="polite" data-reveal><b id="club-count">{Math.min(4, clubs.length)}</b> <span id="club-count-label">clubs affichés sur {clubs.length}</span></p>
+      <div class="club-grid" data-reveal-group>
         {clubs.map((club, index) => (
-          <article class="club-card" data-index={index} data-city={club.city} data-search={`${club.name} ${club.city} ${club.area}`.toLowerCase()}>
+          <article class="club-card" data-reveal data-index={index} data-city={club.city} data-search={`${club.name} ${club.city} ${club.area}`.toLowerCase()}>
             <div class="club-card-head"><span>{String(index + 1).padStart(2, '0')}</span><span>{club.city}</span></div>
             <h3><a class="club-card-title" href={`/clubs/${club.slug}/`}>{club.name}</a></h3>
             <dl><div><dt>Lieu</dt><dd>{club.area}</dd></div><div><dt>Réunion indicative</dt><dd>{club.meeting}</dd></div></dl>
@@ -144,15 +146,15 @@ const rotaractMadagasikaraLogo = 'https://rotaplast.rotary.mg/assets/rotaract-ma
     </section>
 
     <section class="collective" id="action">
-      <header class="collective-heading">
+      <header class="collective-heading" data-reveal>
         <div><p class="section-index">03 · VIE DU RÉSEAU</p><h2>Actions et événements <br />en commun.</h2></div>
         <p>Au-delà des projets propres à chaque club, les Rotaractiens se mobilisent ensemble sur le terrain et se retrouvent lors des grands temps forts de Madagascar et du District 9220.</p>
       </header>
       <div class="collective-layout">
-        <div class="shared-actions">
+        <div class="shared-actions" data-reveal-group>
           <div class="shared-title"><h3>Actions et événements phares</h3><span>{collectiveActions.length} initiative{collectiveActions.length > 1 ? 's' : ''}</span></div>
           {collectiveActions.map((action, index) => (
-            <article class:list={['shared-action', { featured: index === 0 }]}>
+            <article class:list={['shared-action', { featured: index === 0 }]} data-reveal>
               {index === 0 && action.image && <img src={action.image} alt={action.imageAlt || action.title} loading="lazy" />}
               <div class="shared-action-copy">
                 <div class="shared-action-meta"><span>{action.category}</span><span>{action.meta}</span></div>
@@ -162,7 +164,7 @@ const rotaractMadagasikaraLogo = 'https://rotaplast.rotary.mg/assets/rotaract-ma
             </article>
           ))}
         </div>
-        <aside class="network-events" aria-labelledby="events-title">
+        <aside class="network-events" aria-labelledby="events-title" data-reveal="left">
           <div class="shared-title"><h3 id="events-title">Événements communs</h3><span>{networkEvents.length} rendez-vous</span></div>
           <p class="events-intro">Ces rendez-vous reviennent au fil de l’année. Les dates exactes sont annoncées par les clubs et le District.</p>
           {networkEvents.map((event) => (
@@ -180,18 +182,18 @@ const rotaractMadagasikaraLogo = 'https://rotaplast.rotary.mg/assets/rotaract-ma
     </section>
 
     <section class="agenda" id="agenda">
-      <header class="agenda-heading">
+      <header class="agenda-heading" data-reveal>
         <div><p class="section-index">04 · AGENDA DES CLUBS</p><h2>Prochainement &<br /><em>dernières activités.</em></h2></div>
         <p>Ce que les clubs organisent dans les prochaines semaines et ce qu’ils viennent de vivre sur le terrain — publié par les clubs eux-mêmes.</p>
       </header>
       <div class="agenda-layout">
-        <div class="agenda-col">
+        <div class="agenda-col" data-reveal-group>
           <div class="agenda-title"><h3>Prochainement</h3><span>{upcomingEvents.length} événement{upcomingEvents.length > 1 ? 's' : ''}</span></div>
           {upcomingEvents.length === 0 && (
             <p class="agenda-empty">Aucun événement annoncé pour le moment. Les clubs publient ici leurs prochaines rencontres et actions ouvertes. <a href="/contact/">Signaler un événement →</a></p>
           )}
           {upcomingEvents.map((item) => (
-            <article class="agenda-item">
+            <article class="agenda-item" data-reveal>
               <div class="agenda-date"><strong>{item.date ? formatDate(item.date) : 'Date à confirmer'}</strong><span>{item.kind === 'event' ? 'Événement' : 'Action'}</span></div>
               <div class="agenda-copy">
                 <p class="agenda-club">{item.clubName || 'Interclubs'}{item.lieu ? ` · ${item.lieu}` : ''}</p>
@@ -205,13 +207,13 @@ const rotaractMadagasikaraLogo = 'https://rotaplast.rotary.mg/assets/rotaract-ma
             </article>
           ))}
         </div>
-        <div class="agenda-col">
+        <div class="agenda-col" data-reveal-group>
           <div class="agenda-title"><h3>Dernières activités</h3><span>{latestActivities.length} activité{latestActivities.length > 1 ? 's' : ''}</span></div>
           {latestActivities.length === 0 && (
             <p class="agenda-empty">Les dernières activités des clubs apparaîtront ici dès leur publication.</p>
           )}
           {latestActivities.map((item) => (
-            <article class="agenda-item">
+            <article class="agenda-item" data-reveal>
               <div class="agenda-date"><strong>{item.date ? formatDate(item.date) : 'Date à confirmer'}</strong><span>{item.kind === 'event' ? 'Événement' : 'Action'}</span></div>
               <div class="agenda-copy">
                 <p class="agenda-club">{item.clubName || 'Interclubs'}{item.lieu ? ` · ${item.lieu}` : ''}</p>
@@ -229,30 +231,30 @@ const rotaractMadagasikaraLogo = 'https://rotaplast.rotary.mg/assets/rotaract-ma
     </section>
 
     <section class="participate" id="agir">
-      <div class="participate-heading">
+      <div class="participate-heading" data-reveal>
         <p class="section-index">05 · PASSER À L’ACTION</p>
         <h2>Choisissez votre <br /><em>prochaine étape.</em></h2>
         <p>Le Rotaract se vit d’abord en club. Choisissez la porte d’entrée qui correspond à votre envie.</p>
       </div>
-      <ol class="participation-list">
-        <li><span>01</span><div><h3>Rejoindre un club</h3><p>Découvrez le club le plus proche et contactez directement son équipe.</p></div><a href="#clubs">Trouver un club →</a></li>
-        <li><span>02</span><div><h3>Participer à une première réunion</h3><p>Venez rencontrer les membres, découvrir le fonctionnement du club et poser vos questions.</p></div><a href="#clubs">Voir les coordonnées →</a></li>
-        <li><span>03</span><div><h3>Construire un partenariat</h3><p>Associez votre organisation, votre expertise ou vos moyens à une initiative locale ou nationale.</p></div><a href="https://tally.so/r/yPQ6lp" target="_blank" rel="noreferrer">Proposer un partenariat ↗</a></li>
-        <li><span>04</span><div><h3>Contacter la coordination</h3><p>Pour une demande nationale, institutionnelle ou média, utilisez le formulaire de coordination.</p></div><a href="https://tally.so/r/yPQ6lp" target="_blank" rel="noreferrer">Contacter la coordination ↗</a></li>
+      <ol class="participation-list" data-reveal-group>
+        <li data-reveal><span>01</span><div><h3>Rejoindre un club</h3><p>Découvrez le club le plus proche et contactez directement son équipe.</p></div><a href="#clubs">Trouver un club →</a></li>
+        <li data-reveal><span>02</span><div><h3>Participer à une première réunion</h3><p>Venez rencontrer les membres, découvrir le fonctionnement du club et poser vos questions.</p></div><a href="#clubs">Voir les coordonnées →</a></li>
+        <li data-reveal><span>03</span><div><h3>Construire un partenariat</h3><p>Associez votre organisation, votre expertise ou vos moyens à une initiative locale ou nationale.</p></div><a href="https://tally.so/r/yPQ6lp" target="_blank" rel="noreferrer">Proposer un partenariat ↗</a></li>
+        <li data-reveal><span>04</span><div><h3>Contacter la coordination</h3><p>Pour une demande nationale, institutionnelle ou média, utilisez le formulaire de coordination.</p></div><a href="https://tally.so/r/yPQ6lp" target="_blank" rel="noreferrer">Contacter la coordination ↗</a></li>
       </ol>
     </section>
 
     <section class="faq" id="questions">
-      <div class="faq-heading">
+      <div class="faq-heading" data-reveal>
         <span>Avant de nous rejoindre</span>
         <h2>Les réponses aux premières questions.</h2>
         <p>Chaque club garde son identité et son fonctionnement. Pour les informations propres à un club, contactez directement son équipe.</p>
       </div>
-      <div class="faq-list">
-        <details><summary>Qui peut rejoindre le Rotaract ? <span aria-hidden="true">+</span></summary><p>Le Rotaract accueille les adultes de 18 ans et plus qui souhaitent s’engager, apprendre et agir avec d’autres. Aucun parcours particulier n’est imposé.</p></details>
-        <details><summary>Faut-il déjà connaître un membre ? <span aria-hidden="true">+</span></summary><p>Non. Vous pouvez contacter le club de votre choix et demander à assister à une première réunion ou à une action ouverte.</p></details>
-        <details><summary>Comment choisir son club ? <span aria-hidden="true">+</span></summary><p>Commencez par la proximité, les horaires et les projets qui vous parlent. Une première rencontre permet ensuite de découvrir l’ambiance du club.</p></details>
-        <details><summary>Y a-t-il une cotisation ? <span aria-hidden="true">+</span></summary><p>Les modalités d’adhésion et de cotisation sont définies par chaque club. Le club vous les présentera clairement avant votre engagement.</p></details>
+      <div class="faq-list" data-reveal-group>
+        <details data-reveal><summary>Qui peut rejoindre le Rotaract ? <span aria-hidden="true">+</span></summary><p>Le Rotaract accueille les adultes de 18 ans et plus qui souhaitent s’engager, apprendre et agir avec d’autres. Aucun parcours particulier n’est imposé.</p></details>
+        <details data-reveal><summary>Faut-il déjà connaître un membre ? <span aria-hidden="true">+</span></summary><p>Non. Vous pouvez contacter le club de votre choix et demander à assister à une première réunion ou à une action ouverte.</p></details>
+        <details data-reveal><summary>Comment choisir son club ? <span aria-hidden="true">+</span></summary><p>Commencez par la proximité, les horaires et les projets qui vous parlent. Une première rencontre permet ensuite de découvrir l’ambiance du club.</p></details>
+        <details data-reveal><summary>Y a-t-il une cotisation ? <span aria-hidden="true">+</span></summary><p>Les modalités d’adhésion et de cotisation sont définies par chaque club. Le club vous les présentera clairement avant votre engagement.</p></details>
       </div>
     </section>
   </main>
@@ -278,7 +280,7 @@ const rotaractMadagasikaraLogo = 'https://rotaplast.rotary.mg/assets/rotaract-ma
         <a href="/contact/">Nous contacter</a>
         <a href="/admin/">Administration</a>
       </div>
-      <div class="footer-cta">
+      <div class="footer-cta" data-reveal="scale">
         <span>Prêt à passer à l’action ?</span>
         <strong>Trouvez le club qui vous ressemble.</strong>
         <a href="#clubs">Voir les clubs <span aria-hidden="true">→</span></a>

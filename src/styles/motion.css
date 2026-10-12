@@ -1,0 +1,254 @@
+/* ------------------------------------------------------------------
+ * Motion system — Rotaract Madagascar
+ * Premium, sobre, accessible. Uniquement transform / opacity / clip-path
+ * (GPU). Les états initiaux sont scopés sous `.js` : sans JS, tout reste
+ * visible. `prefers-reduced-motion` coupe le mouvement, garde le sens.
+ * ------------------------------------------------------------------ */
+
+:root {
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-spring: cubic-bezier(.34, 1.35, .44, 1);
+  --dur-1: 180ms;
+  --dur-2: 320ms;
+  --dur-3: 700ms;
+  --dur-4: 950ms;
+}
+
+::selection { background: #f7a81b; color: #17458f; }
+
+/* Ancres : ne jamais arriver sous le header sticky. */
+[id] { scroll-margin-top: 6rem; }
+
+/* --- Header sticky + état scrollé -------------------------------- */
+.site-header,
+.t-header {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  transition: box-shadow var(--dur-2) ease;
+}
+.site-header.is-scrolled,
+.t-header.is-scrolled {
+  box-shadow: 0 .9rem 2.2rem rgb(23 69 143 / .14);
+}
+
+/* --- Entrée hero (CSS pur, joue au chargement) -------------------- */
+@keyframes hero-rise {
+  from { opacity: 0; transform: translateY(36px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes hero-clip {
+  from { opacity: 0; clip-path: inset(0 0 0 100%); }
+  to { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+@keyframes kenburns {
+  from { transform: scale(1.09); }
+  to { transform: scale(1); }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+[data-hero] {
+  animation: hero-rise var(--dur-4) var(--ease-out) both;
+  animation-delay: var(--hd, 0s);
+}
+[data-hero='clip'] {
+  animation-name: hero-clip;
+  animation-duration: 1.1s;
+}
+[data-hero='pop'] {
+  animation: pop-in var(--dur-3) var(--ease-spring) both;
+  animation-delay: var(--hd, 0s);
+}
+.kenburns {
+  animation: kenburns 2.6s var(--ease-out) both;
+}
+
+/* --- Révélation au scroll (état piloté par motion.js) -------------- */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity var(--dur-3) ease,
+    transform var(--dur-3) var(--ease-out);
+  will-change: opacity, transform;
+}
+.js [data-reveal='left'] { transform: translateX(-36px); }
+.js [data-reveal='right'] { transform: translateX(36px); }
+.js [data-reveal='scale'] { transform: scale(.93); }
+.js [data-reveal='clip'] {
+  transform: none;
+  clip-path: inset(0 0 100% 0);
+  transition:
+    opacity var(--dur-3) ease,
+    clip-path var(--dur-4) var(--ease-out);
+}
+.js [data-reveal].is-in {
+  opacity: 1;
+  transform: translateY(0);
+  clip-path: inset(0 0 0 0);
+}
+
+/* --- Marquee (bandeau défilant, 100 % CSS) -------------------------- */
+.marquee {
+  overflow: hidden;
+  background: #f7a81b;
+  color: #17458f;
+  border-block: 1px solid rgb(23 69 143 / .25);
+  white-space: nowrap;
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+.marquee-track > span {
+  flex: 0 0 auto;
+  padding: .85rem 0;
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.marquee-track i {
+  font-style: normal;
+  margin: 0 1.6rem;
+  color: #d41367;
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* --- Parallax doux (propriété `translate` dédiée : pas de conflit) - */
+[data-parallax] { scale: 1.14; }
+
+/* --- Micro-interactions premium ------------------------------------ */
+/* Boutons : réponse au doigt + flèche qui s'avance. */
+.header-cta, .button, .show-all, .t-button, .t-donate,
+.volunteer-signup, .events-contact, .sibling-card {
+  transition:
+    transform var(--dur-1) var(--ease-out),
+    background var(--dur-1) ease,
+    color var(--dur-1) ease,
+    box-shadow var(--dur-2) ease;
+}
+.header-cta:active, .button:active, .show-all:active,
+.t-button:active, .t-donate:active, .volunteer-signup:active {
+  transform: scale(.97);
+}
+.header-cta span, .button span {
+  display: inline-block;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+.header-cta:hover span, .button:hover span { transform: translateX(4px); }
+
+/* Souligné coulissant des liens de navigation. */
+.site-header nav a, .t-header nav a {
+  background: linear-gradient(currentcolor, currentcolor) left bottom / 0% 2px no-repeat;
+  transition: background-size var(--dur-2) var(--ease-out), color var(--dur-1) ease;
+  padding-bottom: 2px;
+}
+.site-header nav a:hover, .t-header nav a:hover { background-size: 100% 2px; }
+
+/* Cartes : soulèvement + ombre (cartes blanches uniquement). */
+.sibling-card, .commission-card, .facts {
+  transition: transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) ease;
+}
+.sibling-card:hover, .commission-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 1.2rem 2.4rem rgb(23 69 143 / .14);
+}
+/* Lignes éditoriales : teinte au survol, sans bouger la mise en page. */
+.club-card, .principles li, .participation-list li,
+.club-life-list article, .agenda-item, .routes li,
+.network-event, .journey-list article {
+  transition: background-color var(--dur-2) ease;
+}
+.club-card:hover { background-color: rgb(255 255 255 / .045); }
+.participation-list li:hover, .principles li:hover,
+.club-life-list article:hover, .agenda-item:hover,
+.journey-list article:hover {
+  background-color: rgb(23 69 143 / .035);
+}
+.routes li:hover { background-color: rgb(185 217 235 / .22); }
+.network-event:hover { background-color: rgb(255 255 255 / .06); }
+
+/* Images : zoom lent au survol (cartes + visuels). */
+.shared-action > img, .care-image img, .fort-photo img,
+.faces img, .t-hero-photo img, .hero-visual > img {
+  transition: transform 1.1s var(--ease-out);
+}
+.shared-action:hover > img, .care-image:hover img,
+.fort-photo:hover img, .t-hero-photo:hover img {
+  transform: scale(1.035);
+}
+
+/* Compteurs : chasse fixe pour éviter le jitter. */
+[data-count] { font-variant-numeric: tabular-nums; }
+
+/* SVG contact : tracé qui se dessine + pastilles qui éclatent. */
+.route-map path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-line 1.8s var(--ease-out) .35s forwards;
+}
+@keyframes draw-line { to { stroke-dashoffset: 0; } }
+.route-map circle {
+  transform: scale(0);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pop-in .55s var(--ease-spring) forwards;
+}
+.route-map circle:nth-of-type(1) { animation-delay: .15s; }
+.route-map circle:nth-of-type(2) { animation-delay: 1.15s; }
+.route-map circle:nth-of-type(3) { animation-delay: 1.35s; }
+.route-map circle:nth-of-type(4) { animation-delay: 1.5s; }
+.route-map circle:nth-of-type(5) { animation-delay: 1.65s; }
+.route-map circle:nth-of-type(6) { animation-delay: 1.8s; }
+
+/* Grain subtil sur les aplats sombres (texture premium, statique). */
+.grain { position: relative; isolation: isolate; }
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: .5;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E");
+}
+.grain > * { position: relative; z-index: 2; }
+
+/* --- Mouvement réduit : on coupe le déplacement, on garde le sens -- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .js [data-reveal] {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0 0 0 0);
+    transition: none;
+  }
+  [data-hero], .kenburns,
+  .route-map path, .route-map circle {
+    animation: none;
+  }
+  .route-map path { stroke-dashoffset: 0; }
+  .route-map circle { transform: none; }
+  .marquee-track { animation: none; }
+  [data-parallax] { scale: 1; }
+  .header-cta, .button, .show-all, .t-button, .t-donate,
+  .volunteer-signup, .events-contact,
+  .sibling-card, .commission-card, .facts,
+  .club-card, .principles li, .participation-list li,
+  .club-life-list article, .agenda-item, .routes li,
+  .network-event, .journey-list article,
+  .shared-action > img, .care-image img, .fort-photo img,
+  .faces img, .t-hero-photo img, .hero-visual > img,
+  .site-header, .t-header,
+  .site-header nav a, .t-header nav a,
+  .header-cta span, .button span {
+    transition: none;
+  }
+}
